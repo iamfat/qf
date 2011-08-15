@@ -1,0 +1,22 @@
+<!DOCTYPE html PUBLIC "-//W3C/DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>
+	<?php echo $title ? T(Config::get('page.title_pattern'), array('%title'=>$title)) : Config::get('page.title_default');
+ ?>
+</title>
+<meta http-equiv="Content-Style-Type" content="text/css" />
+<meta http-equiv="Content-Script-Type" content="text/javascript" />
+<base href="<?php echo Config::get('system.base_url') ?>" />
+<?php foreach($css as $f): ?>
+<link href="<?php echo FALSE === strpos($f, '://') ? URI::url('css', array('f'=>$f)) : URI::url($f) ?>" rel="stylesheet" type="text/css" />
+<?php endforeach; ?>
+<?php foreach($js as $f): ?>
+<script src="<?php echo FALSE === strpos($f, '://') ? URI::url('js', array('f'=>$f)) : URI::url($f) ?>" type="text/javascript"></script>
+<?php endforeach; ?>
+</head>
+<body class="padding_1">
+	<?php echo $body ?>
+</body>
+</html>
