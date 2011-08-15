@@ -191,76 +191,17 @@
 	$('.view, [q-event]').livequery(function(){
 
 		var $el = $(this);
-		var cstr = $el.attr('class') || "";
 
-		var parts, object, _events={}, _data={}, dynamics;
-
-		object = $el.attr('q-object');
-		if (!object) {
-			parts = cstr.match(/\bobject:(\S+)/);
-			if (parts) {
-				object = parts[1];
-			}
-			else {
-				object=this.id;
-			}
-		}
-
-		parts = $el.attr('q-event');
-		if (parts) {
-			_events = Q.toQueryParams(parts) || {};
-		}
-		else {
-			parts = cstr.match(/\bevent:(\S+)/);
-			if (parts) {
-				//_events = parts[1].split('&')||[];
-				_events = Q.toQueryParams(parts[1]) || {};
-			}
-
-		}
-
-		parts = $el.attr('q-static');
-		if (parts) {
-			_data = Q.toQueryParams(parts) || {};
-		}
-		else {
-			parts = cstr.match(/\bstatic:(\S+)/);
-			if (parts) {
-				_data = Q.toQueryParams(parts[1]) || {};
-			}
-		}
-
-		parts = $el.attr('q-dynamic');
-		if (parts) {
-			dynamics = Q.toQueryParams(parts)||{};
-		}
-		else {
-			parts = cstr.match(/\bdynamic:(\S+)/);
-			if (parts) {
-				dynamics = Q.toQueryParams(parts[1])||{};
-			}
-		}
-
-		var url = $el.attr('q-src');
-		if (!url) {
-			parts = cstr.match(/\bsrc:(\S+)/);
-			if (parts) {
-				url = parts[1];
-			}
-			else {
-				url = $el.parents('div[src]:first').attr('src');
-			}
-		}
+		var object = $el.classAttr('object') || this.id;
+		var _events = Q.toQueryParams($el.classAttr('event')) || {};
+		var _data = Q.toQueryParams($el.classAttr('static')) || {};
+		var dynamics = Q.toQueryParams($el.classAttr('dynamic')) || {};
+		var url = $el.classAttr('src') || $el.parents('div[src]:first').attr('src');
 
 		var global = true;
-		if ($el.attr('q-global') == 'false') {
-			global = false;
-		}
+		if ($el.classAttr('global') == false) global = false;
 
-		var widget;
-		if ($el.attr('q-widget')) {
-			widget = $el.attr('q-widget');
-		}
+		var widget = $el.classAttr('widget');
 
 		$el.data('_data', _data);
 

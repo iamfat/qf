@@ -67,7 +67,7 @@ window['Q'] = {};
 	
 	Q['toQueryParams'] = function(str, separator) {
 		var hash={};
-		$.each(str.split(separator || '&'), function(i, pair_str) {
+		if (typeof(str) == 'string') $.each(str.split(separator || '&'), function(i, pair_str) {
 			if ((pair = pair_str.split('='))[0]) {
 				var key = decodeURIComponent(pair.shift());
 				var value = pair.length > 1 ? pair.join('=') : pair[0];
