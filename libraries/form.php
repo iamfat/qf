@@ -8,7 +8,7 @@ abstract class _Form extends ArrayIterator {
 	}
 
 
-	private static function _dropdown_item($key, $selected, $val) {
+	protected static function _dropdown_item($key, $selected, $val) {
 		$key = (string) $key;
 		$val = (string) $val;
 
@@ -120,7 +120,7 @@ abstract class _Form extends ArrayIterator {
 		return $this;
 	}
 		
-	private function validate_compare($key, $error, $params){
+	protected function validate_compare($key, $error, $params){
 		if ($params) {
 			//如何匹配 ===，>==,!==等等
 			if (0 == preg_match('/^\s*(!=|==|\^=|\$=|\*=|<=|>=|>|<|)\s*(\w+)\s*$/', $params, $parts)) return;
@@ -168,7 +168,7 @@ abstract class _Form extends ArrayIterator {
 		}
 	}
 	
-	private function validate_is_token($key, $error, $params){
+	protected function validate_is_token($key, $error, $params){
 		$p = preg_match('/^[A-z0-9][A-z0-9_.-@]+(\|\w+)?$/', $this[$key]);
 		if(!$p){
 			$this->no_error = FALSE;
@@ -176,14 +176,14 @@ abstract class _Form extends ArrayIterator {
 		}
 	}
 	
-	private function validate_not_empty($key, $error, $params){
+	protected function validate_not_empty($key, $error, $params){
 		if(empty($this[$key]) || !isset($this[$key]) || is_null($this[$key]) || trim($this[$key])==''){
 			$this->no_error = FALSE;
 			$this->errors[$key][]= $error ?: T('不能为空');
 		}
 	}
 	
-	private function validate_number($key, $error, $params){
+	protected function validate_number($key, $error, $params){
 
 		$this->validate_is_numeric($key, $error, $params);
 		if(!isset($this->errors[$key])){
@@ -191,14 +191,14 @@ abstract class _Form extends ArrayIterator {
 		}
 	}
 		
-	private function validate_is_numeric($key, $error, $params){
+	protected function validate_is_numeric($key, $error, $params){
 		if(!is_numeric($this[$key])){
 			$this->no_error = FALSE;
 			$this->errors[$key][]= $error ?: T('请填写数字');
 		}
 	}
 
-	private function validate_is_email($key, $error, $params) {
+	protected function validate_is_email($key, $error, $params) {
 		if(! preg_match(
 			"/^([a-zA-Z0-9])+([a-zA-Z0-9\._-])*@([a-zA-Z0-9_-])+([a-zA-Z0-9\._-]+)+$/",
 			$this[$key] ) ){
@@ -208,7 +208,7 @@ abstract class _Form extends ArrayIterator {
 	}
 	
 	// length(10), length(5,10), length(20, -1), length(-1, 10)
-	private function validate_length($key, $error, $params) {
+	protected function validate_length($key, $error, $params) {
 		$arr = explode(',', $params);
 		/*
 		当length有一个参数时（v1）：限制该字符串(le)长度是:le=v1
