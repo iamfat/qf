@@ -2,6 +2,21 @@
 
 abstract class _Date {
 
+	private static $_time;
+
+	static function time() {
+		return isset(self::$_time) ? (int) self::$_time : time();
+	}
+
+	static function set_time($time=NULL) {
+		if ($time === NULL) {
+			self::$_time = NULL;
+		}
+		else {
+			self::$_time = (int) $time;
+		}
+	}
+
 	static function range($dfrom, $dto, $from_format=NULL){
 		
 		if($dfrom > 0) 
@@ -33,7 +48,7 @@ abstract class _Date {
 	}
 
 	static function format($time=NULL, $format=NULL) {
-		if (!$time) $time = time();
+		if (!$time) $time = Date::time();
 		
 		$date = getdate($time);
 		
@@ -121,7 +136,7 @@ abstract class _Date {
 	static function relative($time, $now=NULL) {
 		if (!$time) return FALSE;
 	
-		if (!$now) $now=time();
+		if (!$now) $now = Date::time();
 	
 		$diff = abs($time - $now);
 		$nd=getdate($now);
@@ -145,7 +160,7 @@ abstract class _Date {
 	static function fuzzy($time, $detail=FALSE, $now = 0) {
 		if(!$time)return T('早些时候');
 	
-		if(!$now) $now=time();
+		if(!$now) $now = Date::time();
 	
 		$diff=$now-$time;
 	

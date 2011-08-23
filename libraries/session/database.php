@@ -29,13 +29,13 @@ abstract class _Session_Database implements Session_Handler {
 		$db = Database::factory($this->db_name);
 		$val = $db->value('SELECT data FROM `_session` WHERE id="%s"', $id);
 		if ($val) {
-			$db->query('UPDATE `_session` SET mtime = %d WHERE id="%s"', time(), $id);
+			$db->query('UPDATE `_session` SET mtime = %d WHERE id="%s"', Date::time(), $id);
 		}
 		return $val;
 	}
 	
 	function write($id, $data){
-		$now = time();
+		$now = Date::time();
 		$db = Database::factory($this->db_name);
 		$ret= $db->query('INSERT INTO `_session` (id, data, mtime) VALUES ("%s", "%s", %d) ON DUPLICATE KEY UPDATE data="%s", mtime=%d', $id, $data, $now, $data, $now);
 
@@ -51,7 +51,7 @@ abstract class _Session_Database implements Session_Handler {
 
 		if ($max_life_time == 0) return TRUE;
 		
-		$exp_time=time() - $max_life_time;
+		$exp_time = Date::time() - $max_life_time;
 		$db = Database::factory($this->db_name);
 		$ret = $db->query('DELETE FROM `_session` WHERE mtime < %d', $exp_time);
 

@@ -109,7 +109,7 @@ abstract class _Email {
 			$this->_multi=NULL;
 			$this->_body=$text;
 		}else{
-			$this->_multi='LIMS-'.md5(time());
+			$this->_multi='LIMS-'.md5(Date::time());
 			$this->_body.="--{$this->_multi}\n";
 			$this->_body.="Content-Type: text/plain; charset=\"UTF-8\"\nContent-Transfer-Encoding: 8bit\n\n";
 			$this->_body.= stripslashes(rtrim(str_replace("\r", "", $text)));	

@@ -41,7 +41,7 @@ abstract class _Session {
 		
 		session_start();
 		
-		$now = time();
+		$now = Date::time();
 		foreach((array)$_SESSION['@TIMEOUT'] as $token => $data) {
 			list($ts, $timeout) = $data;
 			if ($now - $ts > $timeout) {
@@ -94,7 +94,7 @@ abstract class _Session {
 	
 	static function make_timeout($token, $timeout = 0) {
 		if ($timeout > 0) {
-			$_SESSION['@TIMEOUT'][$token] = array(time(), (int)$timeout);
+			$_SESSION['@TIMEOUT'][$token] = array(Date::time(), (int)$timeout);
 		}
 		else {
 			unset($_SESSION['@TIMEOUT'][$token]);

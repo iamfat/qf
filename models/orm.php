@@ -180,7 +180,7 @@ abstract class _ORM_Model {
 	function touch() {
 		$schema = self::schema($this);
 		if (isset($schema['fields']['mtime'])) {
-			$this->mtime = time();
+			$this->mtime = Date::time();
 		}
 		return $this;
 	}
@@ -213,7 +213,7 @@ abstract class _ORM_Model {
 		
 		$fields = $db->table_fields($name);
 
-		$now=time();
+		$now = Date::time();
 		//设置创建时间
 		if(isset($fields['ctime']) && !$this->_data['ctime'] && !$data['ctime']){
 			$data['ctime'] = $now;
