@@ -12,11 +12,11 @@ final class Core {
 	static $PATHS = array();
 	static $MODULE_BASES = array(); 
 	static $G = array();
+	static $LEGAL_MODULES;
 	
 	static function normalize_path($path) {
 		if (FALSE === strpos($path, 'phar://')) {
 			//尝试替换成phar
-			$p = pathinfo($path);
 			$phar_path = dirname($path).'/'.basename($path, '.phar').'.phar';
 			if (file_exists($phar_path)) {
 				return 'phar://'.$phar_path.'/';
@@ -52,10 +52,26 @@ final class Core {
 		return $path.'/';
 	}
 
-	static function _module_paths($base, $prefix=NULL) {
-		static $paths_arr;
+	static function _check_mod_deps($a, $b) {
+		if (in_array($a->name, $b->deps)) {
+			return -1;
+		}
+		elseif (in_array($b->name, $a->deps)) {
+			return 1;
+		}
+		return 0;
+	}
 
-		$paths = $paths_arr[$base];
+	static function _module_deps($name, $path) {
+		$dep_path = $path.'config/depmod'.EXT;
+		@include($dep_path);
+		return (array) $config[$name];
+	}
+
+	private static $_module_paths;
+	static function _module_paths($base, $prefix=NULL) {
+
+		$paths = self::$_module_paths[$base];
 		if (!isset($paths)) {
 			$paths = array();
 
@@ -65,7 +81,11 @@ final class Core {
 			$excluded = array();
 			foreach($phars as $phar) {
 				$name = basename($phar, '.phar');
-				$paths['phar://'.$phar.'/'] = $name;
+				$k = 'phar://'.$phar.'/';
+				$paths[$k] = (object) array(
+					'name' => $name,
+					'deps' => Core::_module_deps($name, $k)
+				);
 				$excluded[$name] = TRUE;
 			}
 
@@ -73,10 +93,21 @@ final class Core {
 			foreach ($dirs as $dir) {
 				$name = basename($dir);
 				if (isset($excluded[$name])) continue;
-				$paths[$dir.'/'] = $name;
+				$k = $dir.'/';
+				$paths[$k] = (object) array(
+					'name' => $name,
+					'deps' => Core::_module_deps($name, $k)
+				);
 			}
 
-			$paths_arr[$base] = $paths;
+			//进行优先级排序
+			uasort($paths, 'Core::_check_mod_deps');
+
+			foreach ($paths as $k => $o) {
+				$paths[$k] = $o->name;
+			}
+
+			self::$_module_paths[$base] = $paths;
 		}
 
 		if ($prefix) {
@@ -85,7 +116,7 @@ final class Core {
 			}
 			return $paths;
 		}
-	
+
 		return $paths;
 	}
 
@@ -100,9 +131,22 @@ final class Core {
 		return $paths;
 	}
 
+	static function set_legal_modules($mods) {
+		if (!self::$_module_paths) return;
+		foreach (self::$_module_paths as $base => &$paths) {
+			if ($paths) foreach ($paths as $p => $n) {
+				if (!isset($mods[$n])) {
+					unset($paths[$p]);
+					unset(self::$PATHS[$p]);
+				}
+			}
+		}
+
+	}
+
 	static function include_modules($base) {
 		self::$MODULE_BASES[$base] = $base;
-		self::$PATHS = self::_module_paths($base, '@') + self::$PATHS;	
+		self::$PATHS = array_reverse(self::_module_paths($base, '@')) + self::$PATHS;	
 	}
 	
 	static function setup(){
@@ -113,24 +157,34 @@ final class Core {
 		mb_language('uni');
 
 		self::include_path('system', SYS_PATH);
-		self::include_path('application', APP_PATH);
 
 		//加载所有module的路径
 		self::include_modules(ROOT_PATH);
 
+		self::include_path('application', APP_PATH);
+
 		Config::setup();
+
+		Config::load(SYS_PATH);
+		Config::load(APP_PATH);
+
 		Input::setup();
 		Output::setup();
 		
 		View::setup();
-		ORM_Model::setup();
-		Q::setup();
-		
+	}
+
+	static function reload_config() {
+		Config::clear();
+		foreach (array_reverse(Core::$PATHS) as $p=>$n) {
+			Config::load($p);
+		}
 	}
 	
 	static function bind_events() {	
-		foreach ((array)Config::get('hooks') as $event=>$hooks){
-			foreach($hooks as $callback) {
+		foreach ((array) Config::get('hooks') as $event => $hooks){
+			$hooks = array_unique((array)$hooks);
+			foreach ($hooks as $callback) {
 				if(is_array($callback) && isset($callback['callback'])) {
 					$weight = (int) $callback['weight'];
 					$callback = $callback['callback'];

@@ -43,11 +43,6 @@ abstract class _Properties {
 		$this->set($name, $value);
 	}
 	
-	function to_config(){
-		Config::import($this->_items);
-		return $this;
-	}
-	
 	function get($name) {
 		if(isset($this->_items[$name])) return $this->_items[$name];
 		return NULL;

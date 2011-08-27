@@ -63,15 +63,15 @@ abstract class _I18N {
 	
 	static function load_domain($domain) {
 		if (!isset(self::$items[$domain])) {
-			$cache = Cache::factory('memcache');
+			$cache = Cache::factory();
 			$locale = self::$locale;
-			$cache_key = Misc::key('i18n', $domain, $locale);
+			$cache_key = "i18n/$locale/$domain";
 			$lang = Config::get('debug.i18n_nocache') ? NULL : $cache->get($cache_key);
 			if ($lang === NULL) {
+				$lang = array();
 				foreach (array_reverse(Core::file_paths(I18N_BASE.$locale.EXT, $domain)) as $path) {
-					if (file_exists($path)) include $path;
+					@include $path;
 				}
-				$lang = (array) $lang;
 				$cache->set($cache_key, $lang);
 			}
 			self::$items[$domain] = (array) $lang;

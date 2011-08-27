@@ -4,47 +4,44 @@ abstract class _Config {
 
 	static $items = array();
 
-	static function setup(){
-		Config::load(SYS_PATH);
-		Config::load(APP_PATH);
-	}
+	static function setup(){}
 
-	private static function _load($category, $filename, $do_not_overlap) {
-		$config['#ROOT'] = self::$items;
+	private static function _load($category, $filename) {
+		if (!isset(self::$items[$category])) self::$items[$category] = array();
+
+		$config = & self::$items[$category];
+		$config['#ROOT'] = & self::$items;
 		include($filename);
 		unset($config['#ROOT']);
-
-		if (!self::$items[$category]) self::$items[$category] = array();
-		if ($do_not_overlap) {
-			Misc::array_merge_deep($config, self::$items[$category]);
-			self::$items[$category] = $config;
-		}
-		else {
-			Misc::array_merge_deep(self::$items[$category], $config);
-		}
 	}
 
-	static function load($path, $do_not_overlap = FALSE){
-		$dh = @opendir($path.CONFIG_BASE);
-		if($dh) {
-			while (FALSE!==($name=readdir($dh))) {
-				if($name[0]=='.') continue;
-				if(!preg_match('/'.EXT.'$/', $name)) continue;
-				$filename = $path.CONFIG_BASE.$name;
-				if (is_file($filename)) {
-					$category = preg_replace('/'.EXT.'$/','', $name);
-					self::_load($category, $filename, $do_not_overlap);
-				}
+	static function load($path, $category=NULL){
+		if ($category) {
+			self::_load($category, $path.CONFIG_BASE.$category.EXT);
+		}
+		else {
+			$files = glob($path.CONFIG_BASE.'*'.EXT);
+			foreach ($files as $file) {
+				if (!is_file($file)) continue;
+				$category = basename($file, EXT);
+				self::_load($category, $file);
 			}
-			closedir($dh);
 		}
 	}
 	
 	static function shutdown(){
 	}
 
+	static function export() {
+		return self::$items;
+	}
+
 	static function import(& $items){
-		self::$items=array_merge(self::$items, $items);
+		self::$items = $items;
+	}
+
+	static function clear() {
+		self::$items = array();	//清空
 	}
 	
 	static function & get($key, $default=NULL){
@@ -56,10 +53,24 @@ abstract class _Config {
 		return $default;
 	}
 
-	static function set($key, $val=NULL){
+	static function set($key, $val){
 		list($category, $key) = explode('.', $key, 2);
-		if ($val === NULL) unset(self::$items[$category][$key]);
-		self::$items[$category][$key]=$val;
+		if ($key) {
+			if ($val === NULL) {
+				unset(self::$items[$category][$key]);
+			}
+			else {
+				self::$items[$category][$key]=$val;
+			}
+		}
+		else {
+			if ($val === NULL) {
+				unset(self::$items[$category]);
+			}
+			else {
+				self::$items[$category];
+			}
+		}
 	}
 	
 	static function append($key, $val){
