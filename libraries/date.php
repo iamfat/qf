@@ -52,7 +52,7 @@ abstract class _Date {
 		
 		$date = getdate($time);
 		
-		if (!$format) $format = 'Y/m/d h:iA';
+		if (!$format) $format = 'Y/m/d h:i:s A';
 
 		return date(T($format), $time);
 	}
@@ -148,11 +148,11 @@ abstract class _Date {
 			$seconds=$rest%60;
 			$minutes=($rest-$seconds)/60;
 			
-			return Date::format($time, 'h:iA');
+			return Date::format($time, 'h:i:s A');
 		} elseif ($nd['year'] == $td['year']) {
-			return Date::format($time, 'm/d h:iA');
+			return Date::format($time, 'm/d h:i:s A');
 		} else {
-			return Date::format($time, 'Y/m/d h:iA');
+			return Date::format($time, 'Y/m/d h:i:s A');
 		}
 
 	}
@@ -177,7 +177,7 @@ abstract class _Date {
 				$minutes=($rest-$seconds)/60;
 				
 				if ($hours>1) {
-					return Date::format($time, 'h:iA');
+					return Date::format($time, 'h:i:s A');
 				}
 				elseif ($hours==1) {
 					return T('一个多小时前');
@@ -186,9 +186,9 @@ abstract class _Date {
 				return T('几分钟前');
 		
 			} elseif (date('Y', $now) == date('Y', $time)) {
-				return Date::format($time, 'm/d h:iA');
+				return Date::format($time, 'm/d h:i:s A');
 			} else {
-				return Date::format($time, 'Y/m/d h:iA');
+				return Date::format($time, 'Y/m/d h:i:s A');
 			}
 		}
 		
