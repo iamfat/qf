@@ -20,7 +20,7 @@ abstract class _Form extends ArrayIterator {
 	static function dropdown($name, $options, $selected=NULL, $extra=NULL) {
 		if ( ! is_array($selected))
 		{
-			$selected = array($selected);
+			$selected = array((string)$selected);
 		}
 
 		if ($extra != '') $extra = ' '.$extra;
