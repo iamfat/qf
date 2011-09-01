@@ -153,3 +153,7 @@ abstract class _Properties {
 	}
 
 }
+
+function P($object) {
+	return Properties::factory($object);
+}
