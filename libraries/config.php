@@ -16,15 +16,24 @@ abstract class _Config {
 	}
 
 	static function load($path, $category=NULL){
+		$base = $path.CONFIG_BASE;
 		if ($category) {
-			self::_load($category, $path.CONFIG_BASE.$category.EXT);
+			$ffile = $base.$category.EXT;
+			if (is_file($ffile)) {
+				self::_load($category, $ffile);
+			}
 		}
-		else {
-			$files = glob($path.CONFIG_BASE.'*'.EXT);
-			foreach ($files as $file) {
-				if (!is_file($file)) continue;
-				$category = basename($file, EXT);
-				self::_load($category, $file);
+		elseif (is_dir($base)) {
+			$dh = opendir($base);
+			if ($dh) {
+				while($file = readdir($dh)) {
+					if ($file[0] == '.') continue;
+					$ffile = $base . $file;
+					if (!is_file($ffile)) continue;
+					$category = basename($file, EXT);
+					self::_load($category, $ffile);
+				}
+				closedir($dh);
 			}
 		}
 	}

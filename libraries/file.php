@@ -90,9 +90,13 @@ abstract class _File {
 		call_user_func($callback, $path, $params);
 		if (is_dir($path)) {
 			$path = preg_replace('/[^\/]$/', '$0/', $path);
-			$paths = glob($path.'*');
-			foreach ($paths as $p) {
-				self::traverse($p, $callback, $params, $path); 
+			$dh = opendir($path);
+			if ($dh) {
+				while ($file = readdir($dh)) {
+					if ($file[0] == '.') continue;
+					self::traverse($path.$file, $callback, $params, $path); 
+				}
+				closedir($dh);
 			}
 		}
 	}
