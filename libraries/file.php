@@ -77,8 +77,9 @@ abstract class _File {
 					File::copy_r($path, $dest . '/' . $name); 
 				} 
 				else {
-				   	File::check_path($path, $mode);
-					copy($path, $dest . '/' . $name); 
+					$dest_path = $dest . '/' . $name;
+				   	File::check_path($dest_path, $mode);
+					copy($path, $dest_path); 
 					
 				} 
 			} 
