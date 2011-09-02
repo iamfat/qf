@@ -6,7 +6,7 @@ $config['default_page'] = 'index';
 
 $scheme = $_SERVER['HTTPS'] ? 'https':'http';
 $config['base_url'] = $scheme.'://'.$_SERVER['HTTP_HOST'].preg_replace('/[^\/]*$/', '', $_SERVER['SCRIPT_NAME']);
-$config['script_url'] = $schema.'://'.$_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME'].'/';
+$config['script_url'] = $scheme.'://'.$_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME'].'/';
 
 $config['enable_hooks'] = TRUE;
 
