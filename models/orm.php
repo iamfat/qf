@@ -53,6 +53,11 @@ abstract class _ORM_Model {
 		// }
 	}
 
+	function __call($method, $params) {
+		if ($method == __FUNCTION__) return;
+		return $this->trigger_event('call.'.$method, $params);
+	}
+
 	function __get($name){	
 		return $this->get($name);
 	}
