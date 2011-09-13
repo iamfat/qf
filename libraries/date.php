@@ -123,14 +123,18 @@ abstract class _Date {
 			$factors = Date::$UNIT_FACTORS;
 			arsort($factors);
 		}
-		
+
 		foreach ($factors as $k=>$v) {
-			if (!($time % $v) && (!$valid || FALSE!==strpos($valid, $k))) {
-				return array(floor($time / $v), $k);
+			$k_valid = !$valid || FALSE !== strpos($valid, $k);
+			if ($k_valid) {
+				$last = array(floor($time/$v), $k);
+				if (($time % $v) == 0) {
+					break;
+				}
 			}
 		}
-		
-		return array($time, 's');
+
+		return $last ?: array();
 	}
 
 	static function relative($time, $now=NULL) {
