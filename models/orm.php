@@ -369,13 +369,6 @@ abstract class _ORM_Model {
 		}
 
 		$id = $this->_data['id'];
-		if ($id) {
-			$real_names = self::real_names($name);
-			foreach ($real_names as $rn) {
-				self::cache_set($rn, $id, NULL);
-			}
-		}
-
 		$db = self::db($name);
 		$db->begin_transaction();
 
@@ -432,8 +425,6 @@ abstract class _ORM_Model {
 		
 			$db->query('DELETE FROM `%s` WHERE `id`="%s"', $name, $id);
 
-			self::cache_set($name, $id, NULL);
-			
 			if (FALSE === $this->trigger_event('deleted'))
 				return FALSE;
 
@@ -764,7 +755,6 @@ abstract class _ORM_Model {
 
 			if ($no_fetch) {
 				$data = (array) $criteria;
-				if ($data['id']) self::cache_set($real_name, $data['id'], $data);
 			} 
 			else {
 
@@ -772,35 +762,27 @@ abstract class _ORM_Model {
 					$criteria = array('id'=>$criteria);
 				}
 
-				if ($criteria['id']) {
-					$data = self::cache_get($real_name, $criteria['id']);
+				$db = self::db($real_name);
+		
+				$object->encode_objects($criteria);
+
+				//从数据库中获取该数据
+				foreach ($criteria as $k=>$v) {
+					$where[] = $db->quote_ident($k) . '=' . $db->quote($v);
 				}
-
-				if ($data === NULL) {
-					$db = self::db($real_name);
-			
-					$object->encode_objects($criteria);
-
-					//从数据库中获取该数据
-					foreach ($criteria as $k=>$v) {
-						$where[] = $db->quote_ident($k) . '=' . $db->quote($v);
-					}
-					
-					// SELECT * from a JOIN b, c ON b.id=a.id AND c.id = b.id AND b.attr_b='xxx' WHERE a.attr_a = 'xxx'; 
-					$SQL = 'SELECT * FROM '.$db->quote_ident($real_name).' WHERE '.implode(' AND ', $where).' LIMIT 1'; 
-					
-					$result = $db->query($SQL);
-					//只取第一条记录
-					if ($result) {
-						$data = (array) $result->row('assoc');
-						if ($data['id']) self::cache_set($real_name, $data['id'], $data);
-					}
-					else {
-						$data = array();
-					}
-					
+				
+				// SELECT * from a JOIN b, c ON b.id=a.id AND c.id = b.id AND b.attr_b='xxx' WHERE a.attr_a = 'xxx'; 
+				$SQL = 'SELECT * FROM '.$db->quote_ident($real_name).' WHERE '.implode(' AND ', $where).' LIMIT 1'; 
+				
+				$result = $db->query($SQL);
+				//只取第一条记录
+				if ($result) {
+					$data = (array) $result->row('assoc');
 				}
-
+				else {
+					$data = array();
+				}
+					
 			}
 
 			$delete_me = FALSE;
@@ -813,16 +795,9 @@ abstract class _ORM_Model {
 
 				foreach ($real_names as $rname) {
 					
-					$d = self::cache_get($rname, $id);
-					if ($d === NULL) {	
-						$db = self::db($rname);
-						$result = $db->query('SELECT * FROM `%s` WHERE `id`=%d', $rname, $id);
-						$d = $result ? $result->row('assoc') : NULL;
-						if ($d !== NULL) {
-							self::cache_set($rname, $id, $d);	
-						}
-					}
-
+					$db = self::db($rname);
+					$result = $db->query('SELECT * FROM `%s` WHERE `id`=%d', $rname, $id);
+					$d = $result ? $result->row('assoc') : NULL;
 					if ($d !== NULL) {
 						$data += $d;
 					}
@@ -840,7 +815,6 @@ abstract class _ORM_Model {
 						if ($delete_me_until == $rname) break;
 						$db = self::db($rname);
 						$db->query('DELETE FROM `%s` WHERE `id`=%d', $rname, $id);
-						self::cache_set($rname, $id, NULL);
 					}
 					
 					$data = array();
@@ -1044,47 +1018,6 @@ abstract class _ORM_Model {
 	static function setup() {
 	}
 
-	function cache_reset() {
-		$id = $this->id;
-		if ($id > 0) {
-			$rnames = self::real_names($this->_name);
-			foreach ($rnames as $rname) {
-				self::cache_set($rname, $id, NULL);
-			}
-		}
-	}
-
-	static function cache_key($name, $id) {
-		return Misc::key('orm', $name, $id);
-	}
-
-	static function cache_set($name, $id, $data) {
-		//commented it and do nothing
-		/*
-		$cache = Cache::factory('memcache');
-		$cache_key = self::cache_key($name, $id);
-		if ($data === NULL) {
-			$cache->remove($cache_key);
-		}
-		else {
-			$cache->set($cache_key, $data, 600);
-		}
-		 */
-	}
-
-	static function & cache_get($name, $id) {
-		return NULL;
-		//commented because of mysql doc
-		//http://dev.mysql.com/doc/refman/5.0/en/ha-memcached-faq.html#qandaitem-15-5-5-1-28
-		/*
-		$cache = Cache::factory('memcache');
-		$cache_key = self::cache_key($name, $id);
-		$data = $cache->get($cache_key);
-		if ($data !== NULL) Database::$cache_hits ++;
-		return $data;
-		*/
-	}
-	
 }
 
 function O($name, $criteria=NULL, $no_fetch=FALSE) {

@@ -18,19 +18,15 @@ abstract class _Properties {
 		$name = $object->name();
 		$id = $object->id;
 		
-		$data = self::cache_get($name, $id);
-		if ($data === NULL) {
-			$db = ORM_Model::db($name);
-			$table = ORM_Model::PROP_PREFIX.$name;
+		$db = ORM_Model::db($name);
+		$table = ORM_Model::PROP_PREFIX.$name;
 
-			$code = $db->value('SELECT `data` FROM `%s` WHERE `id`=%d', $table, $id);
+		$code = $db->value('SELECT `data` FROM `%s` WHERE `id`=%d', $table, $id);
 
-			//$data = @unserialize(@base64_decode($code)?:$code);
-			// TO BE REMOVED: 这两种形式 哪种兼容性更好一些? Jia Huang @ 2010.12.19
-			//
-			$data = (array) (@unserialize($code) ?: @unserialize(base64_decode($code)));
-			self::cache_set($name, $id, $data);
-		}
+		//$data = @unserialize(@base64_decode($code)?:$code);
+		// TO BE REMOVED: 这两种形式 哪种兼容性更好一些? Jia Huang @ 2010.12.19
+		//
+		$data = (array) (@unserialize($code) ?: @unserialize(base64_decode($code)));
 
 		$this->_items = $data;
 	}
@@ -74,7 +70,6 @@ abstract class _Properties {
 		$table=ORM_Model::PROP_PREFIX.$name;
 		$id = $this->_object->id;
 		$db->query('DELETE FROM `%s` WHERE `id`=%d', $table, $id);
-		self::cache_set($name, $id, NULL);
 		return $this;
 	}
 	
@@ -98,8 +93,6 @@ abstract class _Properties {
 
 			$id = $this->_object->id;
 			$db->query('INSERT INTO `%1$s` VALUES (%2$d, "%3$s") ON DUPLICATE KEY UPDATE `data`="%3$s"', $table, $id, base64_encode($data));
-
-			self::cache_set($name, $id, $this->_items);
 
 			$this->_updated = FALSE;
 			
@@ -125,31 +118,6 @@ abstract class _Properties {
 
 	function object() {
 		return $this->_object;
-	}
-
-	static function cache_key($name, $id) {
-		return Misc::key('prop', $name, $id);
-	}
-
-	static function cache_set($name, $id, $data) {
-
-		$cache = Cache::factory('memcache');
-		$cache_key = self::cache_key($name, $id);
-		if ($data === NULL) {
-			$cache->remove($cache_key);
-		}
-		else {
-			$cache->set($cache_key, $data);
-		}
-	}
-
-	static function & cache_get($name, $id) {
-		
-		$cache = Cache::factory('memcache');
-		$cache_key = self::cache_key($name, $id);
-		$data = $cache->get($cache_key);
-		if ($data !== NULL) Database::$cache_hits ++;
-		return $data;
 	}
 
 }
