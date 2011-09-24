@@ -57,9 +57,9 @@ final class Core {
 			return -1;
 		}
 		elseif (in_array($b->name, $a->deps)) {
-			return 1;
+			return 2;
 		}
-		return 0;
+		return 1;
 	}
 
 	static function _module_deps($name, $path) {
