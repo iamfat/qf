@@ -15,7 +15,11 @@ abstract class _ORM_Iterator implements Iterator, ArrayAccess, Countable {
 	protected $SQL;
 	protected $count_SQL;
 
-	function total_count(){return (int) $this->check_query(TRUE)->count;}
+	function total_count() {
+		$this->check_query('count');
+		return (int) $this->count;
+	}
+
 	function length(){return $this->count();}
 	function name(){return $this->name;}
 
@@ -36,50 +40,52 @@ abstract class _ORM_Iterator implements Iterator, ArrayAccess, Countable {
 		$this->count_SQL = $count_SQL;
 		
 		$this->check_query();
-		
 	}
-	
-	protected $is_fetched=FALSE;
-	protected $is_counted=FALSE;
-	protected function check_query($count_only=FALSE){
-		if ($this->is_fetched) return $this;
-		if ($count_only && $this->is_counted) return $this;
-		
-		$name = $this->name;
-		$db = $this->db;
-		
-		if(!$this->is_counted) {
-			$this->count = $this->count_SQL ? $db->value($this->count_SQL) : 0;
-			$this->length = 0;
-			$this->is_counted=TRUE;
-		}
-		
-		if (!$count_only && !$this->is_fetched) {
 
+	private $_query_flag;
+	protected function set_query($scope, $enable=TRUE) {
+		if ($enable) {
+			$this->_query_flag[$scope] = TRUE;
+		}
+		else {
+			unset($this->_query_flag[$scope]);
+		}
+	}
+
+	protected function isset_query($scope) {
+		return isset($this->_query_flag[$scope]);
+	}
+
+	protected function check_query($scope='fetch') {
+		if ($this->isset_query($scope)) return $this;
+
+		switch($scope) {
+		case 'count':
+			$this->count = $this->count_SQL ? $this->db->value($this->count_SQL) : 0;
+			break;
+		default:
 			if ($this->SQL) {
-				$result = $db->query($this->SQL);
-				
+				$result = $this->db->query($this->SQL);
+
 				$objects = array();
 
 				if ($result) {
 					while ($row=$result->row('assoc')) {
-						$objects[$row['id']] = O($name, $row['id']);
+						$objects[$row['id']] = O($this->name, $row['id']);
 					}
 				}
-			
+
 				$this->objects = $objects;
 				$this->length = count($objects);
 				$this->current_id = key($objects);
 			}
-	
-			$this->is_fetched = TRUE;
 		}
-		
+
+		$this->set_query($scope, TRUE);
 
 		return $this;
-
 	}
-	
+
 	function delete_all() {
 		$this->check_query();
 		foreach ($this->objects as $object) {
@@ -87,16 +93,7 @@ abstract class _ORM_Iterator implements Iterator, ArrayAccess, Countable {
 		}
 		return TRUE;
 	}
-	
-	function sum($name) {
-		$this->check_query();
-		$sum = 0;
-		foreach($this->objects as $object) {
-			$sum += $object->$name;
-		}
-		return $sum;
-	}
-	
+
 	// Iterator Start
 	function rewind(){
 		$this->check_query();
@@ -129,7 +126,8 @@ abstract class _ORM_Iterator implements Iterator, ArrayAccess, Countable {
 
 	// Countable Start
 	function count(){
-		return $this->check_query()->length;
+		$this->check_query();
+		return (int) $this->length;
 	}
 	// Countable End
 	

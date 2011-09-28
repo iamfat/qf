@@ -41,7 +41,7 @@ abstract class _Q extends ORM_Iterator {
 			$this->selector = $this->name.'#'.$selector->id;
 			$this->current_id = $selector->id;
 			//不需要再查询
-			$this->is_fetched = TRUE;
+			$this->set_query('*', TRUE);
 		}
 		//object:new 新建空数据对象
 		elseif (preg_match(Q_Query::PATTERN_EMPTY, $selector, $parts)) {
@@ -51,8 +51,7 @@ abstract class _Q extends ORM_Iterator {
 			$this->name = $parts[1];
 			$this->selector = $selector;
 			//不需要再查询
-			$this->is_counted = TRUE;
-			$this->is_fetched = TRUE;
+			$this->set_query('*', TRUE);
 		}
 		else {
 			$this->selector = $selector;
@@ -77,29 +76,34 @@ abstract class _Q extends ORM_Iterator {
 		return '"'.addcslashes($s, Q_Query::ESCAPE_CHARS).'"';
 	}
 
-	protected function check_query($count_only=FALSE){
-		if ($this->is_fetched) return $this;
-		if ($count_only && $this->is_counted) return $this;
+	private $_is_parsed = FALSE;
+	function parse() {
+		if (!$this->_is_parsed) {
+			$cache_key = 'Q:'.Misc::key($this->selector);
+			$cache = Cache::factory('memcache');
+			if (Config::get('debug.Q_nocache', FALSE) 
+				|| NULL === ($cache_data = $cache->get($cache_key))) {
+				$query = $this->parse_selector();
+				$cache_data = array(
+					'name' => $query->name,
+					'SQL' => $query->SQL,
+					'count_SQL' => $query->count_SQL,
+					'sum_SQL' => 'SELECT SUM(`'.$query->table.'`.`%name`) FROM '.$query->from_SQL,
+				);
+				$cache->set($cache_key,	$cache_data);
+			}
+			$this->name = $cache_data['name'];
+			$this->SQL = $cache_data['SQL'];
+			$this->count_SQL = $cache_data['count_SQL'];
+			$this->sum_SQL = $cache_data['sum_SQL'];
 
-		$cache_key = 'Q:'.Misc::key($this->selector);
-		$cache = Cache::factory('memcache');
-		if (Config::get('debug.Q_nocache', FALSE) 
-			|| NULL === ($cache_data = $cache->get($cache_key))) {
-			$query = $this->parse_selector();
-			$cache_data = array(
-				'name' => $query->name,
-				'SQL' => $query->SQL,
-				'count_SQL' => $query->count_SQL
-			);
-			$cache->set($cache_key,	$cache_data);
+			$this->_is_parsed = TRUE;
 		}
-		$this->name = $cache_data['name'];
-		$this->SQL = $cache_data['SQL'];
-		$this->count_SQL = $cache_data['count_SQL'];
-		
-		parent::check_query($count_only);			
+	}	
 
-		return $this;
+	protected function check_query($scope='fetch') {
+		$this->parse();
+		return parent::check_query($scope);			
 	}
 		
 	function parse_selector(){
@@ -182,6 +186,14 @@ abstract class _Q extends ORM_Iterator {
 		$this->check_query();
 		if($id===NULL) return $this->objects[$this->current_id];
 		return $this->objects[$id];
+	}
+
+
+	protected $sum_SQL;
+	function sum($name) {
+		$this->parse();
+		$SQL = strtr($this->sum_SQL, array('%name'=>$this->db->escape($name)));	
+		return $this->db->value($SQL);
 	}
 
 }
