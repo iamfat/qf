@@ -66,8 +66,15 @@
 
 		function onSuccess(data, status){
 
-			if(opt.success) {
-				opt.success.apply(this, [data, status, url]);
+			if (opt.success) {
+				switch (typeof opt.success) {
+				case 'function':
+					opt.success.apply(this, [data, status, url]);
+					break;
+				case 'string':
+					eval(opt.success).apply(this, [data, status, url]);
+					break;
+				}
 			}
 
 			for (var key in data) {
@@ -86,7 +93,16 @@
 		}
 
 		function onComplete() {
-			if (opt.complete) { opt.complete.apply(this); }
+			if (opt.complete) {
+				switch (typeof opt.complete) {
+				case 'function':
+					opt.complete.apply(this, [data, status, url]);
+					break;
+				case 'string':
+					eval(opt.complete).apply(this, [data, status, url]);
+					break;
+				}
+			}
 
 			delete _triggerQueue[key];
 		}
@@ -197,6 +213,8 @@
 		var _data = Q.toQueryParams($el.classAttr('static')) || {};
 		var dynamics = Q.toQueryParams($el.classAttr('dynamic')) || {};
 		var url = $el.classAttr('src') || $el.parents('div[src]:first').attr('src');
+		var success_func = $el.classAttr('success') || null;
+		var complete_func = $el.classAttr('complete') || null;
 
 		var global = true;
 		if ($el.classAttr('global') == false) global = false;
@@ -273,7 +291,8 @@
 					object:object, 
 					event:e, 
 					data:data, 
-					success:null, 
+					success: success_func,
+					complete: complete_func,
 					url: url,
 					global: global
 				};
