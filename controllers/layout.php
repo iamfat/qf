@@ -3,7 +3,7 @@
 abstract class _Layout_Controller extends Controller {
 	
 	public $layout;
-	public $layout_name = 'layout';
+	protected $layout_name = 'layout';
 	
 	function _before_call($method, &$params) {
 		parent::_before_call($method, $params);
@@ -12,10 +12,10 @@ abstract class _Layout_Controller extends Controller {
 		
 		$this->layout = V($this->layout_name);
 
-		$this->add_js((array) Config::get('page.head_js'), TRUE);
-		$this->add_js((array) Config::get('page.body_js'), FALSE);
-		
-		$this->add_css((array) Config::get('page.css'));
+		$this->add_js('jquery json livequery form');
+		$this->add_js('q/core q/loader q/ajax q/browser');
+
+		$this->add_css('reset text core');
 		
 	}
 
@@ -27,8 +27,8 @@ abstract class _Layout_Controller extends Controller {
 	
 	private $loaded_js;
 	
-	private $head_js;
-	private $body_js;
+	protected $head_js;
+	protected $body_js;
 	
 	// add_js(array($js1, $js2), $top = TRUE);
 	function add_js($js_ser, $head = TRUE, $mode = NULL) {
@@ -68,8 +68,8 @@ abstract class _Layout_Controller extends Controller {
 		return $this;
 	}
 	
-	private $loaded_css;
-	private $css;
+	protected $loaded_css;
+	protected $css;
 	
 	function add_css($css_ser) {
 		
@@ -119,8 +119,4 @@ abstract class _Layout_Controller extends Controller {
 		return $js_ser_arr ? JS::load_sync($js_ser_arr) : '';
 	}
 
-	/* NO.BUG#242(xiaopei.li@2010.12.15) */
-	function require_log_in(){
-		URI::redirect('error/401');
-	}
 }
