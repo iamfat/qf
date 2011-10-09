@@ -392,7 +392,7 @@ abstract class _ORM_Model {
 			return FALSE;
 		}
 		
-		if ($id && $id != $this->_data['id']) {
+		if ($id && $id != $old_data['id']) {
 			$new_data['id'] = $id;
 		}
 
