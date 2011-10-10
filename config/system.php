@@ -18,3 +18,5 @@ $config['session_domain'] = NULL;
 $config['tmp_dir'] = sys_get_temp_dir().'/qf/';
 
 $config['session_name'] = 'qfsession';
+
+// $config['24hour'] = FALSE;

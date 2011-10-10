@@ -47,12 +47,26 @@ abstract class _Date {
 		return $sfrom.' ~ '.$sto;
 	}
 
+	static function default_format($type) {
+		$time_format .= Config::get('system.24hour') ? 'H:i:s' : 'h:i:s A';
+		switch ($type) {
+		case 'time':
+			return $time_format;
+		case 'date':
+			return 'Y/m/d';
+		default:
+			return 'Y/m/d '.$time_format;
+		}
+	}
+
 	static function format($time=NULL, $format=NULL) {
 		if (!$time) $time = Date::time();
 		
 		$date = getdate($time);
 		
-		if (!$format) $format = 'Y/m/d h:i:s A';
+		if (!$format) {
+			$format = Date::default_format();
+		}
 
 		return date(T($format), $time);
 	}
@@ -146,17 +160,19 @@ abstract class _Date {
 		$nd=getdate($now);
 		$td=getdate($time);
 
+		$time_format = Date::default_format('time');
+
 		if($diff >= 0 && $diff<86400 && $nd['yday'] == $td['yday']){			
 			$rest=$diff%3600;
 			$hours=($diff-$rest)/3600;
 			$seconds=$rest%60;
 			$minutes=($rest-$seconds)/60;
-			
-			return Date::format($time, 'h:i:s A');
+
+			return Date::format($time, $time_format);
 		} elseif ($nd['year'] == $td['year']) {
-			return Date::format($time, 'm/d h:i:s A');
+			return Date::format($time, 'm/d '.$time_format);
 		} else {
-			return Date::format($time, 'Y/m/d h:i:s A');
+			return Date::format($time, 'Y/m/d '.$time_format);
 		}
 
 	}
@@ -170,9 +186,12 @@ abstract class _Date {
 	
 		$nd=getdate($now);
 		$td=getdate($time);
-		
+
+
 		if($detail){
 
+			$time_format = Date::default_format('time');
+			
 			if($diff > 0 && $diff<86400 && $nd['yday']==$td['yday']){
 				
 				$rest=$diff%3600;
@@ -181,7 +200,7 @@ abstract class _Date {
 				$minutes=($rest-$seconds)/60;
 				
 				if ($hours>1) {
-					return Date::format($time, 'h:i:s A');
+					return Date::format($time, $time_format);
 				}
 				elseif ($hours==1) {
 					return T('一个多小时前');
@@ -190,9 +209,9 @@ abstract class _Date {
 				return T('几分钟前');
 		
 			} elseif (date('Y', $now) == date('Y', $time)) {
-				return Date::format($time, 'm/d h:i:s A');
+				return Date::format($time, 'm/d '.$time_format);
 			} else {
-				return Date::format($time, 'Y/m/d h:i:s A');
+				return Date::format($time, 'Y/m/d '.$time_format);
 			}
 		}
 		
