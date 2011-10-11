@@ -23,7 +23,7 @@
 		var key = opt.url + ":" + (opt.widget || '*') + ':' +  opt.object + ":" + e.type;
 
 		var req = _triggerQueue[key];
-		if (req != undefined) {
+		if (!opt.in_queue && req != undefined) {
 			req.abort();
 		}
 
