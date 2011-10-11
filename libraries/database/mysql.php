@@ -168,6 +168,16 @@ final class Database_MySQL implements Database_Handler {
 					elseif ($remove_nonexistent) {
 						$field_sql[] = sprintf('DROP %s', $this->quote_ident($key) );
 					}
+					elseif ($key[0] != '@') {
+						$nkey = '@'.$key;
+						while (isset($curr_fields[$nkey])) {
+							$nkey .= '_';
+						}
+
+						$field_sql[] = sprintf('CHANGE %s %s'
+							, $this->quote_ident($key)
+							, $this->field_sql($nkey, $curr_field));
+					}
 				}
 	
 				$curr_indexes = $this->table_indexes($tbl_name);
