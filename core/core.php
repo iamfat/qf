@@ -107,6 +107,7 @@ final class Core {
 				return $b->order - $a->order;
 			});
 
+			$paths = array();
 			foreach ($inf as $k => $o) {
 				$paths[$k] = $o->name;
 			}
