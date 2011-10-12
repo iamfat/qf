@@ -52,16 +52,6 @@ final class Core {
 		return $path.'/';
 	}
 
-	static function _check_mod_deps($a, $b) {
-		if (in_array($a->name, $b->deps)) {
-			return -1;
-		}
-		elseif (in_array($b->name, $a->deps)) {
-			return 2;
-		}
-		return 1;
-	}
-
 	static function _module_deps($name, $path) {
 		$dep_path = $path.'config/depmod'.EXT;
 		@include($dep_path);
@@ -73,7 +63,9 @@ final class Core {
 
 		$paths = self::$_module_paths[$base];
 		if (!isset($paths)) {
-			$paths = array();
+			$inf = array();
+
+			$order = 0;
 
 			$mbase = $base.MODULE_BASE;
 
@@ -82,9 +74,10 @@ final class Core {
 			foreach($phars as $phar) {
 				$name = basename($phar, '.phar');
 				$k = 'phar://'.$phar.'/';
-				$paths[$k] = (object) array(
+				$inf[$k] = (object) array(
 					'name' => $name,
-					'deps' => Core::_module_deps($name, $k)
+					'deps' => Core::_module_deps($name, $k),
+					'order' => $order++,
 				);
 				$excluded[$name] = TRUE;
 			}
@@ -94,16 +87,27 @@ final class Core {
 				$name = basename($dir);
 				if (isset($excluded[$name])) continue;
 				$k = $dir.'/';
-				$paths[$k] = (object) array(
+				$inf[$k] = (object) array(
 					'name' => $name,
-					'deps' => Core::_module_deps($name, $k)
+					'deps' => Core::_module_deps($name, $k),
+					'order' => $order++,
 				);
 			}
 
-			//进行优先级排序
-			uasort($paths, 'Core::_check_mod_deps');
 
-			foreach ($paths as $k => $o) {
+			//进行优先级排序
+			uasort($inf, function($a, $b) {
+				if (in_array($a->name, $b->deps)) {
+					return -1;
+				}
+				elseif (in_array($b->name, $a->deps)) {
+					return 1;
+				}
+
+				return $b->order - $a->order;
+			});
+
+			foreach ($inf as $k => $o) {
 				$paths[$k] = $o->name;
 			}
 
@@ -148,7 +152,7 @@ final class Core {
 		self::$MODULE_BASES[$base] = $base;
 		self::$PATHS = array_reverse(self::_module_paths($base, '@')) + self::$PATHS;	
 	}
-	
+
 	static function setup(){
 
 		spl_autoload_register('Core::autoload');
@@ -170,7 +174,7 @@ final class Core {
 
 		Input::setup();
 		Output::setup();
-		
+
 		View::setup();
 	}
 
@@ -180,7 +184,7 @@ final class Core {
 			Config::load($p);
 		}
 	}
-	
+
 	static function bind_events() {	
 		foreach ((array) Config::get('hooks') as $event => $hooks){
 			$hooks = array_unique((array)$hooks);
@@ -207,7 +211,7 @@ final class Core {
 
 	//定义用于提取类文件名的正则表达类型
 	static function autoload($class){
-		
+
 		//定义类后缀与类路径的对应关系
 		static $CLASS_BASES = array(
 			MODEL_SUFFIX => MODEL_BASE,
@@ -216,13 +220,13 @@ final class Core {
 			AJAX_SUFFIX => CONTROLLER_BASE,
 			'*' => LIBRARY_BASE
 		);
-		
+
 		static $CLASS_PATTERN;
 
 		if ($CLASS_PATTERN === NULL) {
 			$SUFFIX1 = CONTROLLER_SUFFIX.'|'.AJAX_SUFFIX.'|'.VIEW_SUFFIX;
 			$SUFFIX2 = MODEL_SUFFIX.'|'.WIDGET_SUFFIX;
-		
+
 			$CLASS_PATTERN = "/^(_)?(\w+?)(?:({$SUFFIX1})?|({$SUFFIX2})?)$/i";
 		}
 
@@ -230,9 +234,9 @@ final class Core {
 		$class = strtolower($class);
 		$nocache = FALSE;
 		if (preg_match($CLASS_PATTERN, $class, $parts)) {
-	
+
 			list(, $is_core, $name, $suffix1, $suffix2) = $parts;
-	
+
 			if ($suffix1) {
 				$bases = $CLASS_BASES[$suffix1];
 				$need_traverse = FALSE;
@@ -246,7 +250,7 @@ final class Core {
 				$bases = $CLASS_BASES['*'];
 				$need_traverse = TRUE;
 			}
-	
+
 			$scope = $is_core ? 'system': ($need_traverse ? '*' : NULL);
 
 			if (!$nocache) {
@@ -264,7 +268,7 @@ final class Core {
 			a/b/c.php
 			a/b_c.php
 			a_b_c.php
-			*/	
+			 */	
 			$units = explode('_', $name);
 			$paths[] = implode('/', $units);
 			$rest = array_pop($units);
@@ -289,11 +293,11 @@ final class Core {
 					$cacher->set($cache_key, $file);
 				}
 			}
-		
+
 		}
-	
+
 	}
-	
+
 	static function load($base, $name, $scope=NULL) {
 		if (is_array($base)) {
 			foreach($base as $b){
@@ -316,7 +320,7 @@ final class Core {
 		}
 		return FALSE;
 	}
-	
+
 	static function file_exists($path, $scope=NULL) {
 
 		foreach (self::file_paths($path, $scope) as $path) {
@@ -352,18 +356,18 @@ final class Core {
 			}
 			$paths[] = $base.$path;
 		}
-		
+
 		return $paths;
 	}
-	
+
 	private static $mime_dispatchers = array();
-	
+
 	static function register_mime_dispatcher($mime, $dispatcher) {
 		self::$mime_dispatchers[$mime] = $dispatcher;
 	}
-	
+
 	static function dispatch() {
-		
+
 		$accepts = explode(',', $_SERVER['HTTP_ACCEPT']);
 		while (NULL !== ($accept = array_pop($accepts))) {
 			list($mime,) = explode(';', $accept, 2);
@@ -372,10 +376,10 @@ final class Core {
 				return call_user_func($dispatcher);
 			}
 		}
-		
+
 		return self::default_dispatcher();	
 	}
-	
+
 	static function default_dispatcher() {
 		if (Input::$AJAX && Input::$AJAX['widget']) {
 			$widget = Widget::factory(Input::$AJAX['widget']);
