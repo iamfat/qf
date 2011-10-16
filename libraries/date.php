@@ -47,7 +47,7 @@ abstract class _Date {
 		return $sfrom.' ~ '.$sto;
 	}
 
-	static function default_format($type) {
+	static function default_format($type=NULL) {
 		$time_format .= Config::get('system.24hour') ? 'H:i:s' : 'h:i:s A';
 		switch ($type) {
 		case 'time':
