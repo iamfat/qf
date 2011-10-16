@@ -53,7 +53,7 @@ abstract class _ORM_Iterator implements Iterator, ArrayAccess, Countable {
 	}
 
 	protected function isset_query($scope) {
-		return isset($this->_query_flag[$scope]);
+		return isset($this->_query_flag['*']) || isset($this->_query_flag[$scope]);
 	}
 
 	protected function check_query($scope='fetch') {
