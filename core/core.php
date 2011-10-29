@@ -426,7 +426,7 @@ final class Core {
 		$class = NULL;
 		foreach($candidates as $path => $candidate){
 			if(Core::load(CONTROLLER_BASE, $path)){
-				$class = mb_convert_case($candidate[0], MB_CASE_TITLE);
+				$class = str_replace('/', '_', $path);
 				$params = array();
 				if(preg_match_all('/(.*?[^\\\])\./', $candidate[1].'.', $parts)){
 					foreach($parts[1] as $part) {
