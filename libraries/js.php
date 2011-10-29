@@ -142,7 +142,8 @@ abstract class _JS {
 			$mtime = filemtime($path);
 			
 			$lamda = 'jslamda_'.$js_key;
-			$prefix_path =  Config::get('system.tmp_dir');
+			$prefix_path =  Config::get('system.tmp_dir').'js/';
+
 			$locale = Config::get('system.locale');
 			if ($locale) {
 				$prefix_path .= $locale.'_';
@@ -151,6 +152,7 @@ abstract class _JS {
 			if ($mode) {
 				$prefix_path .= $mode.'_';
 			}
+
 			$cache_file = $prefix_path . $lamda;
 			$re_cache = TRUE;
 			if (file_exists($cache_file)) {
