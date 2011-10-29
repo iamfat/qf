@@ -40,6 +40,14 @@ abstract class _View {
 			}
 		}
 	}
+
+	function __unset($key) {
+		unset($this->vars[$key]);
+	}
+
+	function __isset($key) {
+		return isset($this->vars[$key]);
+	}
 		
 	function ob_clean(){
 		unset($this->_ob_cache);
