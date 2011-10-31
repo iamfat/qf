@@ -7,12 +7,28 @@ abstract class _Config {
 	static function setup(){}
 
 	private static function _load($category, $filename) {
-		if (!isset(self::$items[$category])) self::$items[$category] = array();
+		if (is_file($filename)) {
+			if (!isset(self::$items[$category])) self::$items[$category] = array();
 
-		$config = & self::$items[$category];
-		$config['#ROOT'] = & self::$items;
-		include($filename);
-		unset($config['#ROOT']);
+			$config = & self::$items[$category];
+			$config['#ROOT'] = & self::$items;
+			include($filename);
+			unset($config['#ROOT']);
+		}
+		elseif(is_dir($filename)) {
+			$base = $filename;
+			$dh = opendir($base);
+			if ($dh) {
+				if (substr($base, -1) != '/') {
+					$base .= '/';
+				}
+				while ($file = readdir($dh)) {
+					if ($file[0] == '.') continue;
+					self::_load($category, $base . $file);
+				}
+				closedir($dh);
+			}
+		}
 	}
 
 	static function load($path, $category=NULL){
@@ -28,10 +44,7 @@ abstract class _Config {
 			if ($dh) {
 				while($file = readdir($dh)) {
 					if ($file[0] == '.') continue;
-					$ffile = $base . $file;
-					if (!is_file($ffile)) continue;
-					$category = basename($file, EXT);
-					self::_load($category, $ffile);
+					self::_load(basename($file, EXT), $base . $file);
 				}
 				closedir($dh);
 			}
