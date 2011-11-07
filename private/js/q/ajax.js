@@ -66,43 +66,47 @@
 
 		function onSuccess(data, status){
 
-			if (opt.success) {
-				switch (typeof opt.success) {
-				case 'function':
-					opt.success.apply(this, [data, status, url]);
-					break;
-				case 'string':
-					eval(opt.success).apply(this, [data, status, url]);
-					break;
-				}
-			}
-
-			for (var key in data) {
-				if (data.hasOwnProperty(key)) {
-					if(Q.ajaxProcess[key]) {
-
-						Q.ajaxProcess[key].apply(this, [data[key], status, url]);
-					} else {
-						//其他
-						Q.ajaxProcess.content.apply($(key), [data[key]]);
+			setTimeout(function() {
+				if (opt.success) {
+					switch (typeof opt.success) {
+						case 'function':
+							opt.success.apply(this, [data, status, url]);
+							break;
+						case 'string':
+							eval(opt.success).apply(this, [data, status, url]);
+							break;
 					}
 				}
-			}
 
-			if(opt.postAJAX) { opt.postAJAX.apply(this, [data, status, url]); }
+				for (var key in data) {
+					if (data.hasOwnProperty(key)) {
+						if(Q.ajaxProcess[key]) {
+
+							Q.ajaxProcess[key].apply(this, [data[key], status, url]);
+						} else {
+							//其他
+							Q.ajaxProcess.content.apply($(key), [data[key]]);
+						}
+					}
+				}
+
+				if(opt.postAJAX) { opt.postAJAX.apply(this, [data, status, url]); }
+			}, 1);
 		}
 
 		function onComplete() {
-			if (opt.complete) {
-				switch (typeof opt.complete) {
-				case 'function':
-					opt.complete.apply(this, [data, status, url]);
-					break;
-				case 'string':
-					eval(opt.complete).apply(this, [data, status, url]);
-					break;
+			setTimeout(function() {
+				if (opt.complete) {
+					switch (typeof opt.complete) {
+						case 'function':
+							opt.complete.apply(this, [data, status, url]);
+							break;
+						case 'string':
+							eval(opt.complete).apply(this, [data, status, url]);
+							break;
+					}
 				}
-			}
+			}, 2);
 
 			delete _triggerQueue[key];
 		}
