@@ -18,10 +18,10 @@ class Q_Query {
 	public $SQL;
 	public $count_SQL;
 	public $from_SQL;
-	
+
 	public $prev_name;
 	public $prev_table;
-	
+
 	public $join;
 	public $where;
 	public $limit;
@@ -29,9 +29,9 @@ class Q_Query {
 
 	public $join_criteria = array();
 	public $join_tables = array();
-	
+
 	public $rels = array();
-	
+
 	private $or_query;
 	private $and_query;
 
@@ -71,7 +71,7 @@ class Q_Query {
 			echo call_user_func_array('vsprintf', $args)."\n";
 		}
 	}
-	
+
 	function & restore($pop = TRUE, & $arr = FALSE) {
 		$this->log('RESTORE %d', $pop);
 		if ($arr === FALSE) $arr = & $this->stack;
@@ -87,11 +87,11 @@ class Q_Query {
 		}
 		return TRUE;
 	}
-	
+
 	private function finalize_join($join_type=NULL) {
 		$this->log('FINALIZE_JOIN %s', $join_type);
 		if (count($this->join_tables) > 0) {
-		
+
 			switch($join_type) {
 			case 'left':
 				$join_command = 'LEFT JOIN';
@@ -104,18 +104,18 @@ class Q_Query {
 			}
 
 			$this->join[] = $join_command.' ('.implode(', ', array_reverse($this->join_tables)).') ON '.$this->pack_where($this->join_criteria, 'AND');
-			
+
 			$this->join_criteria = array();
 			$this->join_tables = array();
 		}
 	}
-	
+
 	public function pack_where($where, $op = 'AND') {
 		if (!is_array($where)) $where = array($where);
 		if (count($where) <= 1) return $where[0];
 		return '('.implode( ' '.$op.' ', $where).')'; 
 	}
-	
+
 	public function parse_id($part) {
 		$this->where[]= $this->table.'.id='. $this->db->quote($part[1]);
 	}
@@ -130,7 +130,7 @@ class Q_Query {
 	}
 
 	const PATTERN_FIELD_EXPRESSION = '/\s*(!?)((?:[\w\pL-\~])+)\s*(?:(\^=|\$=|\*=|!=|<=|>=|<|>|=)\s*(.+?)|)\s*(?:\||&|$)/u';
-	const PATTERN_FIELD_VALUE = '/(?:(-?[\w_\d.]*)~(-?[\w_\d.]*)|([\'"]*)(.+?)\3)\s*(?:,\s*|$)/u';
+	const PATTERN_FIELD_VALUE = '/(?:(-?[\w_\d.]*)~(-?[\w_\d.]*)|"((?:[^"]|\\")*)"|([^\s,]+))\s*(?:,\s*|$)/u';
 	const PATTERN_FIELD_OBJECT = '/(\w+)#(\d*)/';
 
 	private function get_field_value($value, $has_quotes=FALSE) {
@@ -157,46 +157,46 @@ class Q_Query {
 	}
 
 	public function parse_filter($part) {
-		
+
 		if(!preg_match_all(self::PATTERN_FIELD_EXPRESSION, $part[1], $exps, PREG_SET_ORDER)) return;
-		
+
 		$schema = $this->schema($this->name);
 		$db = $this->db;
 
 		$where = array();
 		foreach ($exps as $exp) {
-		
+
 			list ($foo, $not, $field, $operator) = $exp;
 
 			if(!$operator) {
-				
+
 				if (isset($schema['object_keys'][$field])) {
 					$real_field = $field.self::OBJ_ID_SUFFIX;
 				}
 				else {
 					$real_field = $field;
 				}
-				
+
 				$ident = $db->make_ident($this->table, $real_field);
-				
+
 				if ($not) {
 					$where[] = "($ident IS NULL OR $ident = '')";
 				} else {
 					$where[] = "($ident IS NOT NULL AND $ident != '')";
 				}
-				
+
 				continue;
 			}
-			
+
 			$value = stripcslashes($exp[4]);
 
 			if($operator == '=') {
 				list($field1, $field2) = explode('~', $field, 2);
 				if ($field2) {
 					$where[] = '('.$db->make_ident($this->table, $field1). ' <= ' . $db->quote($value)
-								.' AND '
-								. $db->make_ident($this->table, $field2). ' >= ' . $db->quote($value)
-								.')';
+						.' AND '
+						. $db->make_ident($this->table, $field2). ' >= ' . $db->quote($value)
+						.')';
 					continue;
 				}
 			}
@@ -204,7 +204,9 @@ class Q_Query {
 			if(preg_match_all(self::PATTERN_FIELD_VALUE, $value, $matches, PREG_SET_ORDER)){
 				$sub_where = array();
 				foreach($matches as $match){
-					if($match[4] != '') {
+					if (!isset($match[1])) continue;
+					if ($match[3]) $match[4] = $match[3];
+					if (isset($match[3])) {
 						//单一值
 						switch($operator){
 						case '^=':
@@ -242,7 +244,7 @@ class Q_Query {
 								break;
 							}
 						default:
-							$field_value = $this->get_field_value($match[4], $match[3] != NULL);
+							$field_value = $this->get_field_value($match[4], !!$match[3]);
 							$sub_where[] = $db->make_ident($this->table, $field).$operator.$field_value;
 						}
 					} else {
@@ -294,21 +296,21 @@ class Q_Query {
 			$this->rels[] = array($str, NULL, FALSE);	//有名关系 a b.father		a.father_id = b
 		}
 	}
-	
+
 	private function & parse_rel_criteria(&$rels, &$nn_table, $nn_flip, &$has_nn_rel) {
 
 		$prev_fields = $this->fields($this->prev_name);
 		$fields = $this->fields($this->name);
-		
+
 		$db = $this->db;
 
 		$nn_rels = array();
 		$join_criteria = array();
-		
+
 		foreach ($rels as $part) {
 
 			list($name, $prev_name) = $part;
-			
+
 			$oid = $name.self::OBJ_ID_SUFFIX;
 			$prev_oid = $prev_name.self::OBJ_ID_SUFFIX;
 
@@ -368,23 +370,23 @@ class Q_Query {
 			}
 
 		}
-		
+
 		if (count($nn_rels) > 0) {
 			$has_nn_rel = TRUE;
 		}
-		
+
 		foreach ($nn_rels as $nn_rel) {
 			if ($nn_rel == '*') continue;
 			$join_criteria[] =  $db->make_ident($nn_table, 'type') . '=' . $db->quote($nn_rel);
 		}
-		
+
 		return $join_criteria;
 
 	}
-	
+
 	private function finish_rels() {
 		static $guid = 0;
-		
+
 		$db = $this->db;
 
 		$rels = $this->rels;
@@ -397,7 +399,7 @@ class Q_Query {
 		$join_tables = array();
 		$join_criteria = $this->where;
 		$this->where = array();
-		
+
 		$join_tables[] = $db->make_ident($this->real_name($this->prev_name)).' '.$db->quote_ident($this->prev_table);
 
 		// 对象名的顺序
@@ -414,17 +416,17 @@ class Q_Query {
 			$rel_id2 = $db->make_ident($this->table, 'id');
 			$nn_flip = TRUE;
 		} 	
-		
+
 		$nn_table = 'r'.($guid ++);
 
 		$has_nn_rel = FALSE;
 		$has_rel = FALSE;
-		
+
 		$and_rels = array();
 		foreach ($rels as $part) {
-		
+
 			list($name, $prev_name, $or_op) = $part;
-			
+
 			if ($or_op) {
 				$or_rels[] = array($name, $prev_name);
 				continue;
@@ -437,10 +439,10 @@ class Q_Query {
 				}
 				$or_rels = array();
 			}
-			
+
 			$and_rels[] = array($name, $prev_name);
 		}
-		
+
 		if (count($or_rels)>0) {
 			$criteria = $this->parse_rel_criteria($or_rels, $nn_table, $nn_flip, $has_nn_rel);
 			if (count ($criteria) > 0) {
@@ -449,18 +451,18 @@ class Q_Query {
 			}
 			$or_rels = array();
 		}
-		
+
 		$criteria = $this->parse_rel_criteria($and_rels, $nn_table, $nn_flip, $has_nn_rel);
 		if (count ($criteria) > 0) {
 			$join_criteria[] = $this->pack_where($criteria, 'AND');
 			$has_rel = TRUE;
 		}
-		
+
 		if (!$has_rel && !$has_nn_rel) {
 			$join_criteria[] = $nn_table.'.type=""';
 			$has_nn_rel = TRUE;
 		}
-		
+
 		if ($has_nn_rel) {
 
 			$join_tables[] = ($nn_flip ? $db->make_ident($rela_name) : $db->make_ident($rela_name))
@@ -486,7 +488,7 @@ class Q_Query {
 	public function parse_rest($text) {
 
 		$skip_filters = FALSE;
-		
+
 		$count = 0;
 		//处理#id
 		$text = preg_replace_callback('/^\s*#(\d+)/u', array($this, 'parse_id'), $text, -1, $count);
@@ -494,15 +496,15 @@ class Q_Query {
 			//如果存在id 则其他条件无意义
 			$skip_filters = TRUE;
 		}
-		
+
 		//处理pseudo
 		$text = preg_replace_callback('/:(\w+)(?:\(((?:\\[\)]|[^\)])+)\))?/u', array($this, 'parse_pseudo'), $text);
 
 		//处理条件过滤
 		if (!$skip_filters) {
-		
+
 			$text = preg_replace_callback('/\[\s*((?:[^\[\]](?:\\[\[\]])?)+)\s*\]/u', array($this, 'parse_filter'), $text);
-			
+
 		}
 
 		//处理与上一级的关系
@@ -510,13 +512,13 @@ class Q_Query {
 			$text = preg_replace_callback('/\.([\w-]+|\*|\@\(((?:\\[\)]|[^\)])+)\))/u', array($this, 'parse_rel'), $text);
 			$this->finish_rels();
 		}
-		
+
 		//处理与下一级的关系
 		$this->rels = array();
 		$text = preg_replace_callback('/<([\w-]+|\*|\@\(((?:\\[\)]|[^\)])+)\))/u', array($this, 'parse_prel'), $text);
-	
+
 	}
-	
+
 	private function store_unit($finalize = FALSE) {
 		$this->log('STORE_UNIT %d WITH SEP %s', $finalize, $this->sep);
 		switch ($this->sep) {
@@ -562,9 +564,9 @@ class Q_Query {
 			$unit = $part[1][0];
 			$offset = $part[0][1] + strlen($part[0][0]);
 			$sep = $part[2][0];
-			
+
 			// printf("%s, %s, %s<br/>", H($unit), $offset, $sep);
-			
+
 			//检查是否有子选择
 			if ($unit[0] == '(') {
 				$this->store();
@@ -574,17 +576,17 @@ class Q_Query {
 			}
 			//提取name
 			else {
-				
+
 				if(!preg_match(self::PATTERN_NAME, $unit, $matches)) break;
-			
+
 				$this->name = $matches[1];
 				$rest = $matches[2];
 
 				$this->table = 't'.($guid++);
-				
+
 				if (!$this->alias[$this->name]) $this->alias[$this->name] = $this->table;
 				$this->table_name[$this->table] = $this->name;
-		
+
 				if (count($this->prev_and_query) > 0) {
 					while ($this->restore(TRUE, $this->prev_and_query)) {
 						$this->parse_rest($rest);
@@ -604,9 +606,9 @@ class Q_Query {
 				else {
 					$this->parse_rest($rest);
 				}
-			
+
 			}
-			
+
 			$this->prev_name = $this->name;
 			$this->prev_table = $this->table;
 
@@ -620,26 +622,26 @@ class Q_Query {
 			}
 
 		}
-		
+
 	}
 
 	function makeSQL() {
 
 		if ($this->name) {
-			
+
 			$db = $this->db;
 
 			$SQL = $db->make_ident($this->real_name($this->name)).' '.$db->quote_ident($this->table);
 			$this->finalize_join();
-			
+
 			if ($this->join) {
 				$SQL .= ' '. implode(' ', array_reverse($this->join));
 			}
-			
+
 			if ($this->where) {
 				$SQL .= ' WHERE '. $this->pack_where($this->where, 'AND');
 			}
-			
+
 			if ($this->union) {
 				$SQL = '('.$SQL.') UNION ('.implode(') UNION (', $this->union).')';
 				$count_SQL = 'SELECT COUNT(*) count FROM ('.$SQL.') union_table';
@@ -660,7 +662,7 @@ class Q_Query {
 					$SQL .= ' ORDER BY '.implode(', ', $this->order_by);
 				}
 			}
-			
+
 			if ($this->limit) {
 				$SQL .= ' LIMIT '.$this->limit;
 			}
@@ -668,11 +670,10 @@ class Q_Query {
 			$this->from_SQL = $SQL;
 			$this->SQL = 'SELECT DISTINCT '.$this->table.'.id FROM '.$SQL;
 			$this->count_SQL = 'SELECT COUNT(DISTINCT '.$db->make_ident($this->table, 'id').') count FROM ' . $count_SQL;
-			
-		}
-		
-	}
-	
-}
 
+		}
+
+	}
+
+}
 
