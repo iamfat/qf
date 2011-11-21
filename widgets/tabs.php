@@ -13,20 +13,25 @@ class _Tabs_Widget extends Widget {
 
 	function sort_tabs() {
 		$tabs = $this->vars['tabs'];
-		uasort($tabs, function($a, $b) {
-			$aw = (int) $a['weight'];
-			$bw = (int) $b['weight'];
-			if ($aw == $bw) {
-				return 0;
+		$order = array();
+		$weight = array();
+		$i = 0;
+		foreach ($tabs as $k => $v) {
+			$order[$k] = $i++;
+			$weight[$k] = $tabs[$k]['weight'];
+		}
+
+		uksort($tabs, function($ak, $bk) use($weight, $order) {
+			$aw = $weight[$ak];
+			$bw = $weight[$bk];
+
+			if ($aw != $bw) {
+				return $aw - $bw;
 			}
-			elseif ($aw < $bw) {
-				return 1;
-			}
-			else
-				return -1;
+			return $order[$ak] - $order[$bk];
 		});
 		
-		$this->vars['tabs'] = array_reverse($tabs);
+		$this->vars['tabs'] = $tabs;
 	}
 
 	function add_tab($tid, $data){
