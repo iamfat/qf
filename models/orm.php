@@ -368,7 +368,7 @@ abstract class _ORM_Model {
 			
 		}
 
-		$id = $this->_data['id'];
+		$old_id = $id = $this->_data['id'];
 		$db = self::db($name);
 		$db->begin_transaction();
 
@@ -392,7 +392,8 @@ abstract class _ORM_Model {
 			return FALSE;
 		}
 		
-		if ($id && $id != $old_data['id']) {
+		if ($id && $id != $old_id) {
+			$old_data['id'] = $old_id;
 			$new_data['id'] = $id;
 		}
 
