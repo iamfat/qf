@@ -80,9 +80,10 @@ abstract class _URI {
 		return '<a href="'.$url.'"'.$extra.'>'.$text.'</a>';
 	}
 	
-	static function mailto($mail, $name=NULL) {
-		if(!$name) $name = $mail;
-		return '<a href="mailto:'.$mail.'">'.$name.'</a>';
+	static function mailto($mail, $name=NULL, $extra=NULL) {
+		if (!$name) $name = $mail;
+		if ($extra) $extra = ' '.$extra;
+		return '<a href="mailto:'.$mail.'"'.$extra.'>'.$name.'</a>';
 	}
 		
 }
