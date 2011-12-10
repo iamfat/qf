@@ -18,11 +18,11 @@ abstract class _I18N {
  		self::$items = NULL;
  	}
 	
-	static function HT($domain=self::ALL_DOMAIN, $str, $args=NULL, $options=NULL, $convert_return=FALSE) {
+	static function HT($domain=NULL, $str, $args=NULL, $options=NULL, $convert_return=FALSE) {
 		return Output::H(self::T($domain, $str, $args, $options), $convert_return);
 	}
 	
-	static function T($domain=self::ALL_DOMAIN, $str, $args=NULL, $options=NULL) {
+	static function T($domain=NULL, $str, $args=NULL, $options=NULL) {
 		if(is_array($str)){
 			foreach($str as &$s){
 				$s = self::T($domain, $s, $args, $options);
@@ -32,11 +32,15 @@ abstract class _I18N {
 		$options['domain'] = $domain;
 		return T($str, $args, $options);
 	}
-	
+
+	static function _convert_str($domain, $str) {
+		return self::$items[$domain][$str] ?: self::$items['application'][$str] ?: self::$items['system'][$str];
+	}
+
 	static function convert($str, $options=NULL) {
 		$options = (array) $options;
 		
-		$domain = $options['domain'] ?: NULL;
+		$domain = $options['domain'] ?: 'application';
 		
 		self::load_domain($domain);
 		
@@ -48,13 +52,13 @@ abstract class _I18N {
 		
 		*/
 
-		$converted_str = self::$items[$domain][$str];
+		$converted_str = self::_convert_str($domain, $str);
 		if (isset($converted_str)) {
 			return (string) $converted_str;
 		}
 		else {
 			list($str, $sub) = explode("|:", $str, 2);
-			$converted_str = self::$items[$domain][$str];
+			$converted_str = self::_convert_str($domain, $str);
 			if (isset($converted_str)) return (string) $converted_str;
 		}
 		
