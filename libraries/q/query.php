@@ -385,7 +385,6 @@ class Q_Query {
 	}
 
 	private function finish_rels() {
-		static $guid = 0;
 
 		$db = $this->db;
 
@@ -417,7 +416,7 @@ class Q_Query {
 			$nn_flip = TRUE;
 		} 	
 
-		$nn_table = 'r'.($guid ++);
+		$nn_table = 'r'.(self::$_table_guid ++);
 
 		$has_nn_rel = FALSE;
 		$has_rel = FALSE;
@@ -548,7 +547,21 @@ class Q_Query {
 
 	//数据对象正则模式
 	//object:relationship[expression]
-	const PATTERN_UNIT = '/((?:\((?:\([^()]+\)|[^()]+)+\)|\[(?:\[[^[\]]*\]|"(?:[^"]|\\")*"|[^\[\]"]+)+\]|\\.|[^ ,(\[|]+)+)\s*([|,]?)\s*/u';
+	const PATTERN_UNIT = '`(
+		(?:
+			\(
+				(?:
+					\([^()]+\)
+					|[^()]+
+				)+
+			\)
+			|\[
+				\s*(?:!?)(?:(?:[\w\pL-\~])+)\s*(?:(?:\^=|\$=|\*=|!=|<=|>=|<|>|=)\s*(?:.+?)|)\s*(?:\||&)?
+			\]
+			|[^ ,(\[|]+
+		)+
+	)\s*([|,]?)\s*`ux';
+
 	const PATTERN_NAME = '/^(\w+)(.*)?/u';
 
 	//新建对象正则模式  
@@ -556,17 +569,19 @@ class Q_Query {
 	const PATTERN_EMPTY = '/^\s*(\w+):empty\s*$/';
 	const ESCAPE_CHARS = '[]|,"\'';
 
-	function parse_selector($selector) {
-		static $guid = 0;
+	private static $_table_guid = 0;
+	static function reset_table_counter() {
+		self::$_table_guid = 0;
+	}
 
+	function parse_selector($selector) {
+		
 		$offset = 0;
 		while (0 < preg_match(self::PATTERN_UNIT, $selector, $part, PREG_OFFSET_CAPTURE, $offset)) {
 			$unit = $part[1][0];
 			$offset = $part[0][1] + strlen($part[0][0]);
 			$sep = $part[2][0];
-
-			// printf("%s, %s, %s<br/>", H($unit), $offset, $sep);
-
+			
 			//检查是否有子选择
 			if ($unit[0] == '(') {
 				$this->store();
@@ -576,13 +591,12 @@ class Q_Query {
 			}
 			//提取name
 			else {
-
 				if(!preg_match(self::PATTERN_NAME, $unit, $matches)) break;
 
 				$this->name = $matches[1];
 				$rest = $matches[2];
 
-				$this->table = 't'.($guid++);
+				$this->table = 't'.(self::$_table_guid++);
 
 				if (!$this->alias[$this->name]) $this->alias[$this->name] = $this->table;
 				$this->table_name[$this->table] = $this->name;
