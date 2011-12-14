@@ -14,7 +14,13 @@ abstract class _Event {
 	private $stop_propagation;
 
 	private function _sort(){
-		uasort($this->queue, function($a, $b){ return $a['weight'] > $b['weight']; });
+		uasort($this->queue, function($a, $b){ 
+			if ($a['weight'] != $b['weight']) {
+				return $a['weight'] > $b['weight']; 
+			}
+
+			return $a['order'] > $b['order'];
+		});
 		$this->sorted=TRUE;
 	}
 
@@ -68,9 +74,13 @@ abstract class _Event {
 				if(is_object($class)) $class = get_class($class);
 				$key = $class .'.'.$callback[1];
 			}
-		}		
+		}
 
-		$this->queue[strtolower($key)] =  &$event;
+		$key = strtolower($key);		
+		if (!isset($this->queue[$key])) {
+			$event['order'] = count($this->queue);
+		}
+		$this->queue[$key] =  &$event;
 		
 	}
 	
