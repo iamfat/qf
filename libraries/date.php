@@ -86,13 +86,13 @@ abstract class _Date {
 			if (!$zero || $n != 0) {
 				$zero = FALSE;
 				//$interval[$k] = $n;
-				$output .= $n . T(self::$UNITS[$k]);
+				$output[] = $n . T(self::$UNITS[$k]);
 			}
 			$duration = $duration % $v;
-			if ($k == $precision) break;
+			if (!$duration || $k == $precision) break;
 		}
 		
-		return $output;
+		return implode(' ', $output);
 	}
 
 	protected static $UNITS = array(
