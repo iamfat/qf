@@ -30,12 +30,12 @@ abstract class _Auth_Database implements Auth_Handler {
 	}
 	
 	private static function encode($password){
-		return md5($password);
+		return md5('GENEE_'.$password);
 	}
 	
 	function verify($token, $password){
 		$db = Database::factory($this->db_name);
-		return NULL != $db->value('SELECT `token` FROM `%s` WHERE `token`="%s" AND `password`="%s"', $this->table, $token, self::encode($password));
+		return NULL != $db->value('SELECT `token` FROM `%s` WHERE `token`="%s" AND (`password`="%s" OR `password`="%s")', $this->table, $token, md5($password), self::encode($password));
 	}
 	
 	function change_password($token, $password){
