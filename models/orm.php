@@ -55,8 +55,7 @@ abstract class _ORM_Model {
 
 	function __call($method, $params) {
 		if ($method == __FUNCTION__) return;
-		array_unshift($params, 'call.'.$method);
-		return call_user_func_array(array($this, 'trigger_event'), $params);
+		return $this->trigger_event('call.'.$method, $params);
 	}
 
 	function __get($name){	
