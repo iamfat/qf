@@ -7,16 +7,12 @@ $lang['无法识别的对象!'] = 'Unknown Object';
 $lang['文件%filename无法找到.'] = 'Cannot Locate File %filename';
 $lang['文件%filename无法读取.'] = 'Cannot Recognize File %filename';
 $lang['文件%filename不是可识别的图片格式(GIF/JPG/PNG)'] = 'File %filename is not A Valid Picture File (GIF/JPG/PNG)';
-//$lang['You must validate your email address for this account before logging in via OpenID'] = '';
-//$lang['OpenID registration failed for the reasons listed. You may register now, or if you already have an account you can <a href=\%s\">log in</a> now and add your OpenID under \""My Account\"""""'] = '';
-//$lang['Only site administrators can create new user accounts.'] = '';
 $lang['Submit'] = 'Submit';
 $lang['最初'] = 'unknown';
 $lang['现在'] = 'present';
 $lang['Y/m/d h:i:s A'] = 'm/d/Y h:i:s A';
 $lang['很久以前'] = 'Long Time Ago';
 $lang['m/d h:i:s A'] = 'm/d h:i:s A';
-$lang['Y/m/d h:i:s A'] = 'm/d/Y h:i:s A';
 $lang['早些时候'] = 'Early Today';
 $lang['一个多小时前'] = 'About an Hour ago';
 $lang['几分钟前'] = 'Several Minutes ago';
@@ -35,5 +31,6 @@ $lang['月'] = 'month';
 $lang['小时'] = 'hour';
 $lang['分钟'] = 'minute';
 $lang['秒'] = 'second';
-
-
+$lang['无法连接LDAP, 请检查您的LDAP配置'] = 'Unable to connect LDAP, please check your LDAP settings';
+$lang['不可识别的图片数据'] = 'Unrecognized image data';
+$lang['请填写规定长度的信息'] = 'Please fill the information in proper length';

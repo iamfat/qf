@@ -88,7 +88,7 @@ abstract class _File {
 	} 
 
 	static function traverse($path, $callback, $params=NULL, $parent=NULL) {
-		call_user_func($callback, $path, $params);
+		if (FALSE === call_user_func($callback, $path, $params)) return;
 		if (is_dir($path)) {
 			$path = preg_replace('/[^\/]$/', '$0/', $path);
 			$dh = opendir($path);
