@@ -484,7 +484,7 @@ abstract class _ORM_Model {
 					'id1'=>array('type'=>'bigint', 'null'=>FALSE),
 					'id2'=>array('type'=>'bigint', 'null'=>FALSE),
 					'type'=>array('type'=>'varchar(20)', 'null'=>FALSE),
-					'approved'=>array('type'=>'tinyint unsigned', 'null'=>FALSE, 'default'=>0),
+					'approved'=>array('type'=>'int', 'null'=>FALSE, 'default'=>0),
 				), 
 				//indexes
 			'indexes' => array( 

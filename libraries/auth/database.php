@@ -13,29 +13,42 @@ abstract class _Auth_Database implements Auth_Handler {
 		$this->table = $opt['database.table'] ?: '_auth';
 
 		$db = Database::factory($this->db_name);		
-		if(!$db->table_exists($this->table)){
-			$fields = array(
-				'token'=>array('type'=>'varchar(80)', 'null'=>FALSE, 'default'=>''),
-				'password'=>array('type'=>'varchar(32)', 'null'=>FALSE, 'default'=>''),				
-			);
-			$indexes = array(
-				'primary'=>array('type'=>'primary', 'fields'=>array('token')),
-			);
-			$db->create_table(
-				$this->table, 
-				$fields, $indexes,
-				$opt['database.engine']
-			);
-		}
+		$db->prepare_table(
+			$this->table, 
+			array(
+				'fields' => array(
+					'token'=>array('type'=>'varchar(80)', 'null'=>FALSE, 'default'=>''),
+					'password'=>array('type'=>'varchar(100)', 'null'=>FALSE, 'default'=>''),				
+				),
+				'indexes' => array(
+					'PRIMARY'=>array('type'=>'primary', 'fields'=>array('token')),
+				),
+				'engine' => $opt['database.engine']
+			)
+		);
 	}
 	
 	private static function encode($password){
-		return md5('GENEE_'.$password);
+		// crypt SHA512
+		$salt = '$6$'.Misc::random_password(8, 2).'$';
+		return crypt($password, $salt);
 	}
 	
 	function verify($token, $password){
 		$db = Database::factory($this->db_name);
-		return NULL != $db->value('SELECT `token` FROM `%s` WHERE `token`="%s" AND (`password`="%s" OR `password`="%s")', $this->table, $token, md5($password), self::encode($password));
+		$hash = $db->value('SELECT `password` FROM `%s` WHERE `token`="%s"', $this->table, $token);
+		if ($hash) {
+			if ($hash[0] == '$') {	
+				// crypt method
+				return crypt($password, $hash) == $hash;
+			}
+			else {
+				// old md5 method
+				return $hash == md5($password) || $hash == md5('GENEE_'.$password);
+			}
+		}
+
+		return FALSE;	
 	}
 	
 	function change_password($token, $password){
