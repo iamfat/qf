@@ -104,7 +104,7 @@ final class Core {
 					return 1;
 				}
 
-				return $b->order - $a->order;
+				return $a->order - $b->order;
 			});
 
 			$paths = array();
