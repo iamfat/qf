@@ -497,7 +497,7 @@ class Q_Query {
 		}
 
 		//处理pseudo
-		$text = preg_replace_callback('/:(\w+)(?:\(((?:\\[\)]|[^\)])+)\))?/u', array($this, 'parse_pseudo'), $text);
+		$text = preg_replace_callback('/:(\w+)\(((?:\\[\)]|[^\)])+)\)/u', array($this, 'parse_pseudo'), $text);
 
 		//处理条件过滤
 		if (!$skip_filters) {
