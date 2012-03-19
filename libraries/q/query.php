@@ -131,7 +131,7 @@ class Q_Query {
 
 	const PATTERN_FIELD_EXPRESSION = '/\s*(!?)((?:[\w\pL-\~])+)\s*(?:(\^=|\$=|\*=|!=|<=|>=|<|>|=)\s*(.+?)|)\s*(?:\||&|$)/u';
 	const PATTERN_FIELD_VALUE = '/(?:(-?[\w_\d.]*)~(-?[\w_\d.]*)|"((?:[^"]|\\")*)"|([^\s,]+))\s*(?:,\s*|$)/u';
-	const PATTERN_FIELD_OBJECT = '/(\w+)#(\d*)/';
+	const PATTERN_FIELD_OBJECT = '/(\w+)#(-?\d+)/';
 
 	private function get_field_value($value, $has_quotes=FALSE) {
 		if (!$has_quotes) {
