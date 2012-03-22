@@ -24,7 +24,7 @@ final class Database_MySQL implements Database_Handler {
 	
 	function connect() {
 		$this->_handle = new mysqli(
-			'p:'.$this->_info['host'], 
+			$this->_info['host'], 
 			$this->_info['user'], $this->_info['password'],
 			$this->_info['db']
 		);
