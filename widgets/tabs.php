@@ -50,8 +50,13 @@ class _Tabs_Widget extends Widget {
 	}
 	
 	function set_tab($tid, $tab) {
-		$this->vars['tabs'][$tid] = $tab;
-		$this->sort_tabs();
+		if ($tab === NULL) {
+			unset($this->vars['tabs'][$tid]);
+		}
+		else {
+			$this->vars['tabs'][$tid] = $tab;
+			$this->sort_tabs();
+		}
 		return $this;
 	}
 
