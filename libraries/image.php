@@ -64,7 +64,7 @@ abstract class _Image {
 	public function resize($max_width = 0, $max_height = 0, $constraint=TRUE) {
 
 		list($width, $height)=$this->calc_size($max_width, $max_height, $constraint);
-
+		
 		if(function_exists('ImageCreateTrueColor')) {
 			$im = ImageCreateTrueColor($width, $height);
 			ImageAlphaBlending($im, false);
@@ -76,32 +76,19 @@ abstract class _Image {
 		else {
 			$im = ImageCreate($width, $height);
 		}
-
-		if ( $this->curr_width > $width ) {
-			@ImageCopyResampled(
-				$im,
-				$this->im,
-				0,
-				0,
-				0,
-				0,
-				$width,
-				$height,
-				$this->curr_width,
-				$this->curr_height
-			);
-		} else {
-			@ImageCopy(
-				$im,
-				$this->im,
-				round(($width - $this->curr_width) / 2),
-				round(($height - $this->curr_height) / 2),
-				0,
-				0,
-				$this->curr_width,
-				$this->curr_height
-			);
-		}
+		
+		@ImageCopyResampled(
+			$im,
+			$this->im,
+			0,
+			0,
+			0,
+			0,
+			$width,
+			$height,
+			$this->curr_width,
+			$this->curr_height
+		);
 
 		$this->im = $im;
 		$this->curr_width = $width;
@@ -110,15 +97,13 @@ abstract class _Image {
 
 	public function crop($left,$top,$width,$height) {
 
-		/*
 		//make sure the cropped area is not greater than the size of the image
-		$width = min($width, $this->curr_width);
-	   	$height = min($height, $this->curr_height);
-		*/
+		// $width = min($width, $this->curr_width);
+	   	// $height = min($height, $this->curr_height);
 
 		//make sure not starting outside the image
-		//$left = max(0, min($this->curr_width - $width, $left));
-		//$top = max(0, min($this->curr_height - $height, $top));
+		// $left = max(0, min($this->curr_width - $width, $left));
+		// $top = max(0, min($this->curr_height - $height, $top));
 
 		if ($left < 0) {$dleft = - $left; $left = 0; }
 		if ($top < 0) {$dtop = - $top; $top = 0; }
@@ -154,10 +139,9 @@ abstract class _Image {
 	public function crop_center($width, $height) {
 		// $width = min($width, $this->curr_width);
 	   	// $height = min($height, $this->curr_height);
-
+		
 		$left = round(($this->curr_width - $width) / 2);
 		$top = round(($this->curr_height - $height) / 2);
-
 		$this->crop($left, $top, $width, $height);
 	}
 
