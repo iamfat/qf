@@ -26,7 +26,8 @@ final class Database_MySQL implements Database_Handler {
 		$this->_handle = new mysqli(
 			$this->_info['host'], 
 			$this->_info['user'], $this->_info['password'],
-			$this->_info['db']
+			$this->_info['db'],
+			$this->_info['port']
 		);
 		
 		if ($this->_handle->connect_errno) {
@@ -64,6 +65,9 @@ final class Database_MySQL implements Database_Handler {
 			}			
 			return implode(',', $s);
 		}
+		elseif (is_bool($s) || is_numeric($s)) {
+			return $s;
+		}
 		return '\''.$this->escape($s).'\'';
 	}
 
@@ -71,9 +75,9 @@ final class Database_MySQL implements Database_Handler {
 		$args = func_get_args();	
 		$SQL = array_shift($args);
 		foreach($args as $k=>&$v){
-			if (is_bool($s) && is_numeric($s)){
+			if (is_bool($s) || is_numeric($s)){
 			} 
-			elseif (is_string($v) && !is_numeric($v)) {
+			elseif (is_string($v)) {
 				$v=$this->escape($v);
 			} 
 			elseif (is_array($v)) {

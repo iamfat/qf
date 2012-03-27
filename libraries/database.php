@@ -79,6 +79,7 @@ final class Database {
 
 		$this->_info['handler'] = $url['scheme'];	
 		$this->_info['host']= urldecode($url['host']);
+		$this->_info['port'] = (int)$url['port'];
 		$this->_info['db'] = substr(urldecode($url['path']), 1);
 		$this->_info['user'] = urldecode($url['user']);
 		$this->_info['password']  = isset($url['pass']) ? urldecode($url['pass']) : NULL;
@@ -152,7 +153,6 @@ final class Database {
 		}else{
 			$SQL=$args[0];
 		}
-
 		//去掉不必要的换行符
 		$SQL = preg_replace('/[\n\r\t]+/', ' ', $SQL);
 	
