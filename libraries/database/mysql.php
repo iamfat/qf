@@ -65,7 +65,7 @@ final class Database_MySQL implements Database_Handler {
 			}			
 			return implode(',', $s);
 		}
-		elseif (is_bool($s) || is_numeric($s)) {
+		elseif (is_bool($s) || is_int($s) || is_float($s)) {
 			return $s;
 		}
 		return '\''.$this->escape($s).'\'';
@@ -75,14 +75,14 @@ final class Database_MySQL implements Database_Handler {
 		$args = func_get_args();	
 		$SQL = array_shift($args);
 		foreach($args as $k=>&$v){
-			if (is_bool($s) || is_numeric($s)){
-			} 
-			elseif (is_string($v)) {
-				$v=$this->escape($v);
-			} 
-			elseif (is_array($v)) {
+			if (is_array($v)) {
 				$v=$this->quote($v);
 			}
+			elseif (is_bool($v) || is_int($v) || is_float($v)){
+			} 
+			else {
+				$v=$this->escape($v);
+			} 
 		}
 		return vsprintf($SQL, $args);	
 	}
