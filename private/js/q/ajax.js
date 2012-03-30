@@ -208,7 +208,7 @@
 		}
 	};
 
-	$('.view, [q-event]').livequery(function(){
+	$('.view, [q-object]').livequery(function(){
 
 		var $el = $(this);
 
@@ -329,7 +329,7 @@
 		});
 	});
 
-	$('div[src] a[href]:not(.view, [q-event], .prevent_default, .group_prevent_default a)').live('click', function(){
+	$('div[src] a[href]:not(.view, [q-object], .prevent_default, .group_prevent_default a)').live('click', function(){
 		var $div = $(this).parents('div[src]:first');
 		if ($div.data('ajaxing')) return false;
 		$div.data('ajaxing', true);
@@ -341,7 +341,7 @@
 		return false;
 	});
 	
-	$('div[src] form:not(.view, [q-event], .prevent_default)').livequery(function(){
+	$('div[src] form:not(.view, [q-object], .prevent_default)').livequery(function(){
 		var $form = $(this);
 		var $div = $form.parents('div[src]:first');
 		$form.ajaxForm({
