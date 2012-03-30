@@ -41,16 +41,13 @@ abstract class _ORM_Model {
 	function __clone()
 	{
 		/* NO.BUG #190 (xiaopei.li@2010.11.26) */
+		$extra_data = Properties::factory($this)->data();
+
 		$this->_objects=array();
 		$this->_data['id'] = 0;
-		$this->_update=$this->_data;
+		$this->_update = array_merge((array)$this->_data, (array)$extra_data);
 
 		$this->init();
-		// clone扩展属性仍有问题
-		// $extra_data = Properties::factory($this)->data();
-		// if (is_array($extra_data)) {
-		//  	$this->_update = array_merge($this->_update, $extra_data);
-		// }
 	}
 
 	function __call($method, $params) {
