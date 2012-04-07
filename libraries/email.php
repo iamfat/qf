@@ -1,40 +1,59 @@
 <?php
 
+/*
+	e.g.
+	
+	$email = new Email;
+	$email->from('jia.huang@geneegroup.com', 'Jia Huang');
+	$email->to('somebody@geneegroup.com', 'Somebody');
+	$email->subject('Hello, world!');
+	$email->body('lalalalalalala...');
+	$email->send();
+
+*/
+
 abstract class _Email {
 
 	private $_recipients;
+	private $_sender;
+	private $_reply_to;
 	private $_subject;
 	private $_body;
-	private $_header=array();
-	private $_multi=NULL;
+	private $_header;
+	private $_multi;
 	
 	function __construct($sender=NULL){
 		if(is_null($sender)){
 			$sender->email = Config::get('system.email_address');
 			$sender->name = Config::get('system.email_name', $sender->email);
 		}
+
 		$this->from($sender->email, $sender->name);
 	}
 	
-	function header(){
-		$this->_header['User-Agent']='LIMS';				
-		$this->_header['Date']=$this->get_date();
-		$this->_header['X-Mailer']='LIMS';		
-		$this->_header['X-Priority']='3 (Normal)';
-		$this->_header['Message-ID']=$this->get_message_id();		
-		$this->_header['Mime-Version']='1.0';
-		if($this->_multi){
-			$this->_header['Content-Type']='multipart/alternative; boundary='.$this->_multi.'';   
-		}else{
-			$this->_header['Content-Transfer-Encoding']='8bit';
-			$this->_header['Content-Type']='text/plain; charset="UTF-8"';   
+	private function make_header() {
+		$header = (array) $this->_header;
+
+		$header['User-Agent']='Genee-Q';				
+		$header['Date']=$this->get_date();
+		$header['X-Mailer']='Genee-Q';		
+		$header['X-Priority']='3 (Normal)';
+		$header['Message-ID']=$this->get_message_id();		
+		$header['Mime-Version']='1.0';
+		if ($this->_multi) {
+			$header['Content-Type']='multipart/alternative; boundary='.$this->_multi.'';   
+		}
+		else {
+			$header['Content-Transfer-Encoding']='8bit';
+			$header['Content-Type']='text/plain; charset="UTF-8"';   
 		}
 
-		foreach($this->_header as $k=>$v){
-			$header.= "$k: $v\n";
+		$header_content = '';
+		foreach($header as $k=>$v){
+			$header_content .= "$k: $v\n";
 		}
-		
-		return $header;
+
+		return $header_content;
 	}
 	
 	function clear(){
@@ -43,57 +62,85 @@ abstract class _Email {
 		unset($this->_body);
 		unset($this->_header);
 		unset($this->_sender);
+		unset($this->_reply_to);
+	}
+
+	private function encode_text($text) {
+		$arr = str_split($text, 75);
+		foreach($arr as &$t) {
+			if (mb_detect_encoding($t, 'UTF-8', true)) {
+				$t = '=?utf-8?B?'.base64_encode($t).'?=';
+			}
+		}
+		return implode(' ', $arr);
 	}
 
 	function send()
 	{		
-		Log::add("邮件:{$this->_subject} 发送到:{$this->_recipients}", "mail");
-		if( Config::get('debug.email') ){
-			$this->clear();
-			return true;
+		$success = FALSE;
+		if (Config::get('debug.email')) {
+			$success = TRUE;
 		}
 		else {		
-			$subject = '=?UTF-8?B?'.base64_encode($this->_subject).'?=';
-			if(mail($this->_recipients, $subject, $this->_body, $this->header())){
-				$this->clear();
-				return true;
-			}
+			$subject = $this->encode_text($this->_subject);
+			$body = $this->_body;
+			
+			$recipients = $this->_header['To'];
+			unset($this->_header['To']);
+
+			$header = $this->make_header();
+			$success = mail($recipients, $subject, $body, $header);
 		}
 		
+		$subject = $this->_subject;
+		$recipients =  $this->_recipients;
+		$sender = $this->_sender;
+		$reply_to = $this->_reply_to;
+
+		Log::add("邮件:{$subject} 由{$sender}(RT:{$reply_to}) 发送到{$recipients} S:{$success}", 'mail');
 		$this->clear();
-		return false;		
+		return $success;		
 	}
 
-	function from($email, $name = '')
+	function from($email, $name=NULL)
 	{
-		if ($name != '' && substr($name, 0, 1) != '"'){
-			$name = '"'.$name.'"';
-		}else{
-			$name=$email;
-		}
-	
-		$this->_header['From']="$name <$email>";
+		$this->_header['From'] = $name ? $this->encode_text($name) . "<$email>" : $email;
 		$this->_header['Return-Path']="<$email>";
 		$this->_header['X-Sender']=$email;
+
+		$this->_sender = $email;
 	}
   	
-	function reply_to($email, $name = '')
+	function reply_to($email, $name=NULL)
 	{
-		if ($name == ''){
-			$name = $email;
-		}
+		$this->_header['Reply-To'] = $name ? $this->encode_text($name) . "<$email>" : $email;
 
-		if (substr($name, 0, 1) != '"'){
-			$name = '"'.$name.'"';
-		}
-
-		$this->_header['Reply-To']="$name <$email>";
+		$this->_reply_to = $email;
 	}
  
-	function to($to)
+	function to($email, $name=NULL)
 	{
-		if(is_array($to))$to=implode(", ", $to);
-		$this->_recipients = $to;
+		if (is_array($email)) {
+			$mails = array();
+			$header_to = array();
+			foreach($email as $k=>$v) {
+				if (is_numeric($k)) {
+					$mails[] = $v;
+					$header_to[] = $v;
+				}
+				else {
+					// $k是email, $v是name
+					$mails[] = $k;
+					$header_to[] = $v ? $this->encode_text($v) . "<$k>" : $k;
+				}
+			}
+			$this->_header['To'] = implode(', ', $header_to);
+			$this->_recipients = implode(', ', $mails);
+		}
+		else {
+			$this->_header['To'] = $name ? $this->encode_text($name) . "<$email>" : $email;
+			$this->_recipients = $email;
+		}
 	}
   	  	
 	function subject($subject)
@@ -101,15 +148,16 @@ abstract class _Email {
 		$subject = preg_replace("/(\r\n)|(\r)|(\n)/", "", $subject);
 		$subject = preg_replace("/(\t)/", " ", $subject);
 		
-		$this->_subject=trim($subject);		
+		$this->_subject = trim($subject);		
 	}
   	
 	function body($text, $html=NULL){
-		if(!$html){
+		if (!$html) {
 			$this->_multi=NULL;
 			$this->_body=$text;
-		}else{
-			$this->_multi='LIMS-'.md5(Date::time());
+		}
+		else {
+			$this->_multi='GENEE-'.md5(Date::time());
 			$this->_body.="--{$this->_multi}\n";
 			$this->_body.="Content-Type: text/plain; charset=\"UTF-8\"\nContent-Transfer-Encoding: 8bit\n\n";
 			$this->_body.= stripslashes(rtrim(str_replace("\r", "", $text)));	
@@ -120,14 +168,14 @@ abstract class _Email {
 		}
 	}
 	
-	private function get_message_id(){
+	private function get_message_id() {
 		$from = $this->_headers['Return-Path'];
 		$from = str_replace(">", "", $from);
 		$from = str_replace("<", "", $from);
 		return  "<".uniqid('').strstr($from, '@').">";	
 	}
 
-	private function get_date(){
+	private function get_date() {
 		$timezone = date("Z");
 		$operator = (substr($timezone, 0, 1) == '-') ? '-' : '+';
 		$timezone = abs($timezone);
@@ -136,31 +184,4 @@ abstract class _Email {
 		return sprintf("%s %s%04d", date("D, j M Y H:i:s"), $operator, $timezone);		
 	}
 
-	private function clean_email($email)
-	{
-		if ( ! is_array($email))
-		{
-			if (preg_match('/\<(.*)\>/', $email, $match))
-		   		return $match['1'];
-		   	else
-		   		return $email;
-		}
-			
-		$clean_email = array();
-		
-		foreach ($email as $addy)
-		{
-			if (preg_match( '/\<(.*)\>/', $addy, $match))
-			{
-		   		$clean_email[] = $match['1'];				
-			}
-		   	else
-			{
-		   		$clean_email[] = $addy;					
-			}
-		}
-		
-		return $clean_email;
-	}
-	
 }
