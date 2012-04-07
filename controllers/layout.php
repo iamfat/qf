@@ -71,11 +71,11 @@ abstract class _Layout_Controller extends Controller {
 	protected $loaded_css;
 	protected $css;
 	
-	function add_css($css_ser) {
+	function add_css($css_ser, $media=NULL) {
 		
 		if (is_array($css_ser)) {
 			foreach ($css_ser as $c) {
-				$this->add_css($c);
+				$this->add_css($c, $media);
 			}
 			
 			return $this;
@@ -94,7 +94,12 @@ abstract class _Layout_Controller extends Controller {
 		
 		if (count($css_ser_arr) > 0) {
 			$css_ser = implode(' ', $css_ser_arr);
-			$this->css[] = $css_ser;
+			if ($media) {
+				$this->css[] = array('file'=>$css_ser, 'media'=>$media);
+			}
+			else {
+				$this->css[] = $css_ser;
+			}
 		}
 
 		return $this;
@@ -103,13 +108,27 @@ abstract class _Layout_Controller extends Controller {
 	function load_css() {
 		$output = '';
 		foreach ((array) $this->css as $f) {
+			if (is_array($f)) {
+				$media = $f['media'];
+				$f = $f['file'];
+			}
+			else {
+				$media = NULL;
+			}
+
 			if (FALSE === strpos($f, '://')) {
 				$url = CSS::cache_file($f);
 			}
 			else {
 				$url = $f;
 			}
-			$output .='<link href="'.H($url).'" rel="stylesheet" type="text/css" />';
+
+			if ($media) {
+				$output .='<link href="'.H($url).'" rel="stylesheet" type="text/css" media="'.$media.'"/>';
+			}
+			else {
+				$output .='<link href="'.H($url).'" rel="stylesheet" type="text/css" />';
+			}
 		}
 		return $output;
 	}
