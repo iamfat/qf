@@ -13,7 +13,7 @@ class Cache_Memcache implements Cache_Handler {
 		if (!$this->memcache) {
 			if (class_exists('Memcache', FALSE)) {
 				$memcache = new Memcache;
-				$memcache->pconnect(MEMCACHE_HOST, MEMCACHE_PORT);
+				$memcache->connect(MEMCACHE_HOST, MEMCACHE_PORT);
 				$this->memcache = $memcache;
 			}
 			elseif (class_exists('Memcached', FALSE)) {
