@@ -669,11 +669,17 @@ class Q_Query {
 					}
 					$SQL .= ' ORDER BY '.implode(', ', $order_by);
 				}
+				else {
+					$SQL .= ' ORDER BY '.$db->make_ident($this->table, 'id');
+				}
 			}
 			else {
 				$count_SQL = $SQL;
 				if ($this->order_by) {
 					$SQL .= ' ORDER BY '.implode(', ', $this->order_by);
+				}
+				else {
+					$SQL .= ' ORDER BY '.$db->make_ident($this->table, 'id');
 				}
 			}
 
@@ -682,7 +688,7 @@ class Q_Query {
 			}
 
 			$this->from_SQL = $SQL;
-			$this->SQL = 'SELECT DISTINCT '.$this->table.'.id FROM '.$SQL;
+			$this->SQL = 'SELECT DISTINCT '.$db->make_ident($this->table, 'id').' FROM '.$SQL;
 			$this->count_SQL = 'SELECT COUNT(DISTINCT '.$db->make_ident($this->table, 'id').') count FROM ' . $count_SQL;
 
 		}
