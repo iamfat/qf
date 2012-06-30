@@ -857,7 +857,7 @@ abstract class _ORM_Model {
 			$schema = Config::get("schema.{$name}");
 			if ($schema === NULL) {
 				$pname = self::parent_name($name);
-				$rname = $pname ? self::real_name($pname) : '';
+				$rname = $pname ? self::real_name($pname) : $name;
 			}
 			else {
 				$rname = $schema['extends'] ?: $name;
