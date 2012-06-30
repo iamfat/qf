@@ -7,6 +7,8 @@ abstract class _Unit_Test {
 	const ANSI_RESET = "\033[0m";
 	const ANSI_HIGHLIGHT = "\033[1m";
 	
+	static $fails=array();
+
 	static function test($name, $return_output = FALSE) {
 		if ($return_output) {
 			ob_start();
@@ -20,16 +22,16 @@ abstract class _Unit_Test {
 		}
 	}
 	
+	static function root() {
+		return ROOT_PATH.'unit_test/';
+	}
+
 	static function test_root() {
-		return ROOT_PATH.'unit_tests/scripts/';
+		return self::root().'tests/';
 	}
 	
 	static function test_path($name) {
-		return ROOT_PATH."unit_tests/scripts/$name.php";
-	}
-	
-	static function expect_path($name) {
-		return ROOT_PATH."unit_tests/expects/$name.out";
+		return self::test_root()."$name.php";
 	}
 	
 	static function echo_title() {
@@ -47,6 +49,10 @@ abstract class _Unit_Test {
 		echo "\n";
 	}
 	
+	static function reset() {
+		Unit_Test::$fails = array();
+	}
+
 	static function echo_assert($name, $expr, $debug=NULL) {
 		
 		echo Unit_Test::ANSI_RESET;
@@ -65,7 +71,23 @@ abstract class _Unit_Test {
 				echo "\n";
 				echo $debug;
 			}
+
+			Unit_Test::$fails[] = array('name'=>$name, 'debug'=>$debug);
 		}
+
+		echo "\n";
+	}
+
+	static function echo_fail($fail) {
+		echo '测试 '.$fail['name'].' ';
+		echo Unit_Test::ANSI_RED;
+		echo "FAILED";
+		echo Unit_Test::ANSI_RESET;
+		if ($fail['debug']) {
+			echo "\n";
+			echo $fail['debug'];
+		}
+
 		echo "\n";
 	}
 	
