@@ -53,7 +53,7 @@ class Q_Query {
 	}
 
 	function real_name($name) {
-		return ORM_Model::real_name($name);
+		return ORM_Model::real_name($name)?:$name;
 	}
 
 	function store(& $arr = FALSE) {
@@ -117,7 +117,7 @@ class Q_Query {
 	}
 
 	public function parse_id($part) {
-		$this->where[]= $this->table.'.id='. $this->db->quote($part[1]);
+		$this->where[]= $this->db->make_ident($this->table, 'id').'='. $this->db->quote($part[1]);
 	}
 
 	public function parse_pseudo($parts) {
@@ -458,7 +458,7 @@ class Q_Query {
 		}
 
 		if (!$has_rel && !$has_nn_rel) {
-			$join_criteria[] = $nn_table.'.type=""';
+			$join_criteria[] = $db->make_ident($nn_table, 'type').'=""';
 			$has_nn_rel = TRUE;
 		}
 
@@ -468,13 +468,13 @@ class Q_Query {
 				.' '.$nn_table;
 			// 对象名相同 则同时比较两个方向的关系
 			if ($name_order == 0) {
-				$_c1 = $this->pack_where(array($nn_table.'.id1='.$rel_id1, $nn_table.'.id2='.$rel_id2), 'AND');
-				$_c2 = $this->pack_where(array($nn_table.'.id1='.$rel_id2, $nn_table.'.id2='.$rel_id1), 'AND');
+				$_c1 = $this->pack_where(array($db->make_ident($nn_table, 'id1').'='.$rel_id1, $db->make_ident($nn_table, 'id2').'='.$rel_id2), 'AND');
+				$_c2 = $this->pack_where(array($db->make_ident($nn_table, 'id1').'='.$rel_id2, $db->make_ident($nn_table, 'id2').'='.$rel_id1), 'AND');
 				$join_criteria[] = $this->pack_where(array($_c1, $_c2), 'OR');
 			}
 			else {
-				$join_criteria[] = $nn_table.'.id1='.$rel_id1;
-				$join_criteria[] = $nn_table.'.id2='.$rel_id2;
+				$join_criteria[] = $db->make_ident($nn_table, 'id1').'='.$rel_id1;
+				$join_criteria[] = $db->make_ident($nn_table, 'id2').'='.$rel_id2;
 			}
 
 		}
@@ -655,6 +655,8 @@ class Q_Query {
 			if ($this->where) {
 				$SQL .= ' WHERE '. $this->pack_where($this->where, 'AND');
 			}
+
+			$SQL = trim($SQL);
 
 			if ($this->union) {
 				$SQL = '('.$SQL.') UNION ('.implode(') UNION (', $this->union).')';
