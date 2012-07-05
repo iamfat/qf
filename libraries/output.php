@@ -55,7 +55,7 @@ abstract class _Output {
 			return $str;
 			*/
 		}
-		$str = htmlentities(iconv('UTF-8', 'UTF-8//IGNORE', $str), ENT_QUOTES, 'UTF-8', FALSE);
+		$str = htmlentities(iconv('UTF-8', 'UTF-8//IGNORE', $str), ENT_QUOTES, 'UTF-8', TRUE);
 		return $convert_return ? preg_replace('/\n/', '<br/>', $str) : $str;
 	}
 	
