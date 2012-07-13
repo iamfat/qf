@@ -392,7 +392,7 @@ final class Database_MySQL implements Database_Handler {
 		$this->query('DROP TABLE '.$this->quote_ident($tables));
 	}
 	
-	function restore($filename, &$retore_filename, $tables) {
+	function restore($filename, $tables) {
 		
 		$import_command = sprintf('/usr/bin/mysql -h %s -u %s %s %s < %s', 
 				escapeshellarg($this->_info['host']),
