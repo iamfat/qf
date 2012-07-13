@@ -20,7 +20,7 @@ interface Database_Handler {
 	function snapshot($filename, $tbls);
 	function empty_database();
 	function drop_table();
-	function restore($filename, &$restore_filename, $tables);
+	function restore($filename, $tables);
 }
 
 interface DBResult {
