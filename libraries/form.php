@@ -234,7 +234,7 @@ abstract class _Form extends ArrayIterator {
 				$v2 = $tmp;
 			}
 			
-			$str_len = strlen($this[$key]);
+			$str_len = mb_strlen($this[$key]);
 			if ((!$no_min && $str_len < $v1) || (!$no_max && $str_len > $v2)) {
 				$this->no_error = FALSE;
 				$this->errors[$key][]= $error ?: T('请填写规定长度的信息');
