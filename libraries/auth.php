@@ -80,6 +80,11 @@ abstract class _Auth {
 		$this->handler = new $class($opt);
 	}
 
+	function is_creatable() {
+		return $this->token && 
+				(!$this->options['readonly'] || $this->options['allow_create']);
+	}
+
 	function create($password) {
 		if (!$this->token) return FALSE;
 		if ($this->options['readonly'] && !$this->options['allow_create']) return TRUE;
