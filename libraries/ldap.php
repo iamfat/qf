@@ -20,6 +20,7 @@ abstract class _LDAP {
 		if (!$ds) throw new Error_Exception(T('无法连接LDAP, 请检查您的LDAP配置'));
 		
 		@ldap_set_option($ds, LDAP_OPT_PROTOCOL_VERSION, 3);
+		@ldap_set_option($ds, LDAP_OPT_NETWORK_TIMEOUT, 3);
 		
 		$this->ds = $ds;
 		$this->bind_root();
