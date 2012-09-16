@@ -15,7 +15,13 @@
 		}
 		?><span class="tab_wrapper"><span class="tab<?php echo $tab['active']?' active_tab':''?>"><?php echo $content ?></span><?php 
 				if($tab['number']): 
-					$len = strlen($tab['number']);
+					if ($tab['number'] > 99) {
+						$tab['number'] = '...';
+						$len = 2;
+					}
+					else {
+						$len = strlen($tab['number']);
+					}
 				?><span class="tab_superscript num_notif num_notif_<?php echo $len;?>"><?php echo $tab['number'] ?></span><?php 
 				endif; 
 			?></span><?php 
