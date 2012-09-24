@@ -10,10 +10,13 @@
 			}
 			$content = implode(' <span class="separator middle">►</span> ', $links);
 		}
-		else {
-			$content = URI::anchor($tab['url'], $tab['title'], 'class="middle"');
-		}
-		?><span class="tab_wrapper"><span class="tab<?php echo $tab['active']?' active_tab':''?>"><?php echo $content ?></span><?php 
+		?>
+		<?php if(!isset($tab['*'])) { ?>
+			<a href="<?php echo $tab['url'] ?>" class="middle">
+		<?php } ?>
+			<span class="tab_wrapper"><span class="tab<?php echo $tab['active']?' active_tab':''?>">
+				<?php if(!isset($tab['*'])) {echo $tab['title'];} else {echo $content;} ?>
+			</span><?php 
 				if($tab['number']): 
 					if ($tab['number'] > 99) {
 						$tab['number'] = '...';
@@ -24,7 +27,8 @@
 					}
 				?><span class="tab_superscript num_notif num_notif_<?php echo $len;?>"><?php echo $tab['number'] ?></span><?php 
 				endif; 
-			?></span><?php 
+			?></span>
+			<?php if(!isset($tab['*'])) { echo "</a>"; } ?><?php 
 			endforeach; ?>
 		</span></span>
 	</span>
