@@ -188,7 +188,7 @@ final class Core {
 
 	static function bind_events() {	
 		foreach ((array) Config::get('hooks') as $event => $hooks){
-			foreach ($hooks as $callback) {
+			foreach ((array) $hooks as $callback) {
 				if(is_array($callback) && isset($callback['callback'])) {
 					$weight = (int) $callback['weight'];
 					$key = $callback['key'];
