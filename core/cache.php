@@ -136,8 +136,7 @@ final class Cache {
 		* @return 无
 	 */
 	static function remove_cache_file($path) {
-		$ext = pathinfo($path, PATHINFO_EXTENSION);
-		$cache_file = 'cache/'.hash('md4', $path).'.'.$ext;
+		$cache_file = self::cache_filename($path);
 		$cache_path = ROOT_PATH.PUBLIC_BASE.$cache_file;
 		@unlink($cache_path);
 	}
