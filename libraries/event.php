@@ -7,6 +7,7 @@ abstract class _Event {
 	private $queue=array();
 	private $sorted=FALSE;
 	private $name;
+	private $debug;
 	
 	public $return_value;
 	public $next;
@@ -37,6 +38,10 @@ abstract class _Event {
 		array_unshift($args, $this);
 		
 		foreach($this->queue as &$hook){
+			if ($this->debug) {
+				error_log('event trace: '.$this->name.' > '.@json_encode($hook['callback']));
+			}
+
 			if(FALSE === call_user_func_array($hook['callback'], $args)) {
 				$this->stop_propagation = TRUE;
 				break;
@@ -107,6 +112,7 @@ abstract class _Event {
 			if ($e) {
 				$e->stop_propagation = FALSE;
 				$e->return_value = $retval;
+				$e->debug = !!Config::get('debug.event:'.$name);
 				call_user_func_array(array($e, $method), $params);
 				$retval = $e->return_value;
 				if ($e->stop_propagation) {
@@ -115,6 +121,7 @@ abstract class _Event {
 					}
 					break;
 				}
+				$e->debug = FALSE;
 			}
 		}
 		return $retval;
