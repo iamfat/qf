@@ -136,7 +136,7 @@ final class Cache {
 		* @return 无
 	 */
 	static function remove_cache_file($path) {
-		list($ext) = pathinfo($path, PATHINFO_EXTENSION);
+		$ext = pathinfo($path, PATHINFO_EXTENSION);
 		$cache_file = 'cache/'.hash('md4', $path).'.'.$ext;
 		$cache_path = ROOT_PATH.PUBLIC_BASE.$cache_file;
 		@unlink($cache_path);
