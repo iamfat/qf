@@ -85,6 +85,10 @@ abstract class _Auth {
 				(!$this->options['readonly'] || $this->options['allow_create']);
 	}
 
+	function is_readonly() {
+		return !$this->token || $this->options['readonly'];
+	}
+
 	function create($password) {
 		if (!$this->token) return FALSE;
 		if ($this->options['readonly'] && !$this->options['allow_create']) return TRUE;
