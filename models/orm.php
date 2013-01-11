@@ -80,7 +80,7 @@ abstract class _ORM_Model {
 	}
 	
 	function get($name, $original=FALSE) {
-		if (!$original && isset($this->_update[$name])) return $this->_update[$name];
+		if (!$original && array_key_exists($name, $this->_update)) return $this->_update[$name];
 	
 		if (isset($this->_objects[$name])) return $this->_objects[$name];
 		
@@ -144,7 +144,13 @@ abstract class _ORM_Model {
 			array_map(array($this, __FUNCTION__), array_keys($name), array_values($name));
 		}
 		else {
-			$this->_update[$name] = $value;
+			if ($value === NULL && is_object($this->_objects[$name])) {
+				$o = $this->_objects[$name];
+				$this->_update[$name] = O($o->name());
+			}
+			else {
+				$this->_update[$name] = $value;
+			}
 		}
 		return $this;
 	}
@@ -341,7 +347,7 @@ abstract class _ORM_Model {
 				$data[$rname][$kname] = is_null($v) ? 0 : (is_null($v->id) ? 0 : $v->id);
 				if (!$object_keys[$k]['oname']) {
 					$kname = $k . self::OBJ_NAME_SUFFIX;
-					$data[$rname][$kname] = $v->name();
+					$data[$rname][$kname] = is_null($v) ? 'orm' : $v->name();
 				}
 			}
 			elseif (isset($json_keys[$k])) {
