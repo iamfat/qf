@@ -45,7 +45,7 @@ abstract class _Auth {
 
 	//取消当前用户/指定用户的令牌
 	static function logout() {
-		$curr_token = self::token();
+		$token = self::token();
 		Event::trigger('auth.logout', $token);
 		session_unset();
 		Event::trigger('auth.post_logout', $token);
