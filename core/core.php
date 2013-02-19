@@ -442,32 +442,37 @@ final class Core {
 
 		if (Input::$AJAX) {
 			$class .= AJAX_SUFFIX;
-			if (class_exists($class, false)) {
-				$controller = new $class;
-				$object = Input::$AJAX['object'];
-				$event = Input::$AJAX['event'];
-				$method = $params[0];
-				if(!$method || $method[0]=='_'){
-					$method = 'index_';
-				}
-
-				$method .='_'.( $object ? $object.'_':'') . $event;
-				if(method_exists($controller, $method)){
-					array_shift($params);
-				} else {
-					$method = 'index_'.( $object ? $object.'_':'') . $event;
-					if(!method_exists($controller, $method)) $method = NULL;
-				}
-				
-				if ($method) {
-					Controller::$CURRENT = $controller;
-					Config::set('system.controller_method', $method);
-					Config::set('system.controller_params', $params);
-					$controller->_before_call($method, $params);
-					call_user_func_array(array($controller, $method), $params);
-					$controller->_after_call($method, $params);
-				}
+			
+			if (!class_exists($class, false)) {
+                Core::load(CONTROLLER_BASE, 'ajax');
+                $class = 'AJAX'.CONTROLLER_SUFFIX;
 			}
+
+            $controller = new $class;
+            $object = Input::$AJAX['object'];
+            $event = Input::$AJAX['event'];
+            $method = $params[0];
+            if(!$method || $method[0]=='_'){
+                $method = 'index_';
+            }
+
+            $method .='_'.( $object ? $object.'_':'') . $event;
+            if(method_exists($controller, $method)){
+                array_shift($params);
+            } else {
+                $method = 'index_'.( $object ? $object.'_':'') . $event;
+                if(!method_exists($controller, $method)) $method = NULL;
+            }
+            
+            if ($method) {
+                Controller::$CURRENT = $controller;
+                Config::set('system.controller_method', $method);
+                Config::set('system.controller_params', $params);
+                $controller->_before_call($method, $params);
+                call_user_func_array(array($controller, $method), $params);
+                $controller->_after_call($method, $params);
+            }
+
 		} 
 		else {
 
