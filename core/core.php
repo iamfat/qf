@@ -158,6 +158,7 @@ final class Core {
 
 		spl_autoload_register('Core::autoload');
 
+		setlocale(LC_ALL, 'UTF8');
 		mb_internal_encoding('utf-8');
 		mb_language('uni');
 
