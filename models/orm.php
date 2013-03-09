@@ -1,5 +1,93 @@
 <?php
 
+final class ORM_Pool {
+
+	const POOL_EXPIRES = 3;
+	private static $POOL = array();
+
+	private static function key($oname, $oid) {
+		return $oname.'#'.$oid;
+	}
+
+	static $cleanup_timeout = 0;
+	static function cleanup() {
+		$now = time();
+		if (self::$cleanup_timeout < $now) {
+			foreach((array)self::$POOL as $k => $o) {
+				if ($o->ref_expires > $now) {
+					unset(self::$POOL[$k]);
+				}
+			}
+			self::$cleanup_timeout = $now + self::POOL_EXPIRES;
+		}
+	}
+
+	static function get($oname, $oid) {
+		$key = self::key($oname, $oid);
+		$o = self::$POOL[$key];
+		return is_object($o) ? $o->object : NULL;
+	}
+	
+	static function set($oname, $oid, $object, $ref_count=0) {
+		$key = self::key($oname, $oid);
+
+		$o = self::$POOL[$key];
+		if ($o->object === $object) {
+			$o->ref_count += $ref_count;
+		}
+		else {
+			$o->object = $object;
+			$o->ref_count = $ref_count;
+		}
+			
+		$o->ref_expires = time() + self::POOL_EXPIRES;
+		self::$POOL[$key] = $o;
+
+		self::cleanup();
+	}
+	
+	static function ref($oname, $oid) {
+		$key = self::key($oname, $oid);
+		$o = self::$POOL[$key];
+		if (isset($o)) {
+			$o->ref_count++;
+			$o->ref_expires = time() + self::POOL_EXPIRES;
+		}
+	}
+
+	static function unref($oname, $oid) {
+		$key = self::key($oname, $oid);
+		$o = self::$POOL[$key];
+		if (isset($o)) {
+			$o->ref_count--;
+			if ($o->ref_count <= 0) {
+				return self::release($oname, $oid);
+			}
+			$o->ref_time = time();
+			return $o->ref_count;
+		}
+		return 0;
+	}
+
+	static function release($oname, $oid=NULL) {
+		if (is_object($oname) && $oid === NULL) {
+			$object = $oname;
+			$oid = $object->id;
+			$oname = $object->name();
+		}
+		else {
+			$object = NULL;
+		}
+
+		$key = self::key($oname, $oid);
+		$o = self::$POOL[$key];
+		if ($object === NULL || $object === $o->object) unset(self::$POOL[$key]);
+		return max(0, $o->ref_count);
+	}
+
+}
+
+
 abstract class _ORM_Model {
 
 	const RELA_PREFIX = '_r_';
@@ -111,8 +199,9 @@ abstract class _ORM_Model {
 			if ($attr_oname && self::class_exists($attr_oname)) {
 				//尝试从模型对象池中获得对象 防止对象间关联造成的死锁
 				$pooled_object = NULL;
-				if ($attr_oid) $pooled_object = self::pool_get($attr_oname, $attr_oid);
+				if ($attr_oid) $pooled_object = ORM_Pool::get($attr_oname, $attr_oid);
 				if ($pooled_object) {
+					ORM_Pool::ref($attr_oname, $attr_oid);
 					$this->_objects[$name] = $pooled_object;
 				}
 				else {
@@ -171,12 +260,18 @@ abstract class _ORM_Model {
 	function set_data($data) {
 		if (is_array($data)) {
 			$name = $this->_name;
-			if ($this->_data['id']) {
-				self::pool_release($name, $this->_data['id']);
+			if ($this->_data['id'] 
+				&& $this === ORM_Pool::get($name, $this->_data['id'])) {
+				$ref_count = ORM_Pool::release($name, $this->_data['id']);
 			}
+			else {
+				$ref_count = 0;
+			}
+
 			if ($data['id']) {
-				self::pool_set($name, $data['id'], $this);
+				ORM_Pool::set($name, $data['id'], $this, $ref_count);
 			}
+
 			$this->_data = $data;
 		}
 	}
@@ -948,45 +1043,12 @@ abstract class _ORM_Model {
 		return self::db($name)->table_indexes(self::real_name($name), $refresh);
 	}
 	
-	static $POOL = array();
-	static function pool_get($oname, $oid) {
-		$o = self::$POOL[$oname.$oid];
-		if (!$o) return NULL;
-		$o->ref_count ++;
-		return $o->object;
-	}
-	
-	static function pool_set($oname, $oid, $object) {
-		$o = self::$POOL[$oname.$oid];
-		if (!isset($o)) {
-			$o->ref_count = 0;
-			self::$POOL[$oname.$oid] = $o;
-		}
-		$o->object = $object;
-	}
-	
-	static function pool_release($oname, $oid=NULL) {
-		if ($oname instanceof ORM_Model) {
-			$oid = $oname->id;
-			$oname = $oname->name();
-		}
-		
-		if (!$oid) return;
-			
-		$o = self::$POOL[$oname.$oid];
-		if ($o) {
-			$ref_count = $o->ref_count;
-			$o->ref_count --;
-			if ($o->ref_count <= 0) {
-				unset(self::$POOL[$oname.$oid]);
-			}
-		}
-	}
-	
 	private function release_objects() {
 		foreach ($this->_objects as $object) {
 			if (!$object->id) continue;
-			self::pool_release($object);
+			if ($object === ORM_Pool::get($object->name(), $object->id)) {
+				ORM_Pool::unref($object->name(), $object->id);
+			}
 		}
 		$this->_objects = array();
 	}
