@@ -66,13 +66,7 @@ abstract class _Email {
 	}
 
 	private function encode_text($text) {
-		$arr = str_split($text, 75);
-		foreach($arr as &$t) {
-			if (mb_detect_encoding($t, 'UTF-8', true)) {
-				$t = '=?utf-8?B?'.base64_encode($t).'?=';
-			}
-		}
-		return implode(' ', $arr);
+		return mb_encode_mimeheader($text, 'UTF-8');
 	}
 
 	function send()
