@@ -84,7 +84,7 @@ abstract class _JS {
 
 	static function redirect($url){
 		session_write_close();
-		JS::run('window.location.href="'.JS::escape($url).'";');
+		JS::run('window.location.href="'.JS::escape(URI::url($url)).'";');
 	}
 	
 	static $valid_modes = array('pack', 'mini', 'default');
