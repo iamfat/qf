@@ -136,7 +136,12 @@ window['Q'] = {};
 			$el.load($el.attr('src'));
 		}
 		else {
-			window.location.href = window.location.href;
+			if (window.location.href.match(/#.*$/)) {
+				window.location.reload();
+			}
+			else {
+				window.location.href = window.location.href;
+			}
 		}
 	};
 
