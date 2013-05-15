@@ -79,10 +79,15 @@ abstract class _Q extends ORM_Iterator {
 	private $_is_parsed = FALSE;
 	function parse() {
 		if (!$this->_is_parsed) {
-			$cache_key = 'Q:'.Misc::key($this->selector);
-			$cache = Cache::factory('memcache');
-			if (Config::get('debug.Q_nocache', FALSE) 
-				|| NULL === ($cache_data = $cache->get($cache_key))) {
+			if (extension_loaded('memcache')) {
+				$cache_key = 'Q:'.Misc::key($this->selector);
+				$cache = Cache::factory('memcache');
+				if (!Config::get('debug.Q_nocache', FALSE)) {
+					$cache_data = $cache->get($cache_key);
+				}
+			}
+
+			if (NULL === $cache_data) {
 				$query = $this->parse_selector();
 				$cache_data = array(
 					'name' => $query->name,
@@ -90,8 +95,10 @@ abstract class _Q extends ORM_Iterator {
 					'count_SQL' => $query->count_SQL,
 					'sum_SQL' => 'SELECT SUM(`'.$query->table.'`.`%name`) FROM '.$query->from_SQL,
 				);
-				$cache->set($cache_key,	$cache_data);
+
+				if ($cache) $cache->set($cache_key, $cache_data);
 			}
+
 			$this->name = $cache_data['name'];
 			$this->SQL = $cache_data['SQL'];
 			$this->count_SQL = $cache_data['count_SQL'];

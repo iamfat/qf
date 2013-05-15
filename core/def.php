@@ -35,8 +35,11 @@ define('VEXT', '.phtml');
 if (extension_loaded('xcache')) {
 	define('DEFAULT_CACHE', 'xcache');
 }
-else {
+elseif (extension_loaded('apc')) {
 	define('DEFAULT_CACHE', 'apc');
+}
+else {
+	define('DEFAULT_CACHE', 'nocache');
 }
 
 //仅在注册目录搜索

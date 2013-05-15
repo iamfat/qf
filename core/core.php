@@ -406,7 +406,7 @@ final class Core {
 		*/
 		
 		$file = end($args);
-		if(!preg_match('/[^\\\]\./', $file)){
+		if(!preg_match('/[^\\\\]\./', $file)){
 			//有非法字符的只能是参数
 			$path = implode('/', $args);
 			// home/page/edit/index => index, NULL
@@ -428,7 +428,7 @@ final class Core {
 			if(Core::load(CONTROLLER_BASE, $path)){
 				$class = str_replace('/', '_', $path);
 				$params = array();
-				if(preg_match_all('/(.*?[^\\\])\./', $candidate[1].'.', $parts)){
+				if(preg_match_all('/(.*?[^\\\\])\./', $candidate[1].'.', $parts)){
 					foreach($parts[1] as $part) {
 						$params[] = strtr($part, array('\.'=>'.'));
 					}
