@@ -32,7 +32,7 @@ define('EXT', '.php');
 define('VEXT', '.phtml');
 
 
-if (extension_loaded('xcache')) {
+if (extension_loaded('xcache') && ini_get('xcache.var_size')) {
 	define('DEFAULT_CACHE', 'xcache');
 }
 elseif (extension_loaded('apc')) {

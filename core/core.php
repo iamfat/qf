@@ -54,7 +54,7 @@ final class Core {
 
 	static function _module_deps($name, $path) {
 		$dep_path = $path.'config/depmod'.EXT;
-		@include($dep_path);
+		!file_exists($dep_path) or @include($dep_path);
 		return (array) $config[$name];
 	}
 

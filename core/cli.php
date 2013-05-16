@@ -15,13 +15,43 @@ final class CLI {
 	}
 
 	static function exception($e) {
-		error_log($e->getMessage());
+		$message = $e->getMessage();
+		$file = File::relative_path($e->getFile());
+		$line = $e->getLine();
+		printf("[exception] \x1b[1m%s\x1b[0m (\x1b[34m%s\x1b[0m:$line)\n", $message, $file, $line);
+		if (defined('DEBUG')) {
+			$trace = array_slice($e->getTrace(), 1, 3);
+			foreach ($trace as $n => $t) {
+				fprintf(STDERR, "%3d. %s%s() in (%s:%d)\n", $n + 1,
+								$t['class'] ? $t['class'].'::':'', 
+								$t['function'],
+								File::relative_path($t['file']),
+								$t['line']);
+
+			}
+			fprintf(STDERR, "\n");
+		}
+	}
+
+	static function error($errno , $errstr, $errfile, $errline, $errcontext) {
+		throw new \ErrorException($errstr, $errno, 1, $errfile, $errline);
+	}
+
+	static function assertion($file, $line, $code) {
+		throw new \ErrorException($code, 0, 1, $file, $line);
 	}
 
 }
 
 register_shutdown_function ('CLI::shutdown');
 set_exception_handler('CLI::exception');
+set_error_handler('CLI::error', E_ALL & ~E_NOTICE);
+
+assert_options(ASSERT_ACTIVE, 1);
+assert_options(ASSERT_WARNING, 0);
+assert_options(ASSERT_QUIET_EVAL, 1);
+assert_options(ASSERT_CALLBACK, 'CGI::assertion');
+
 
 Core::setup();
 Core::bind_events();

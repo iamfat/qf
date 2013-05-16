@@ -53,7 +53,7 @@ class Q_Query {
 	}
 
 	function real_name($name) {
-		return ORM_Model::real_name($name)?:$name;
+		return ORM_Model::real_name($name) ?: $name;
 	}
 
 	function store(& $arr = FALSE) {

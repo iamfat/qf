@@ -31,7 +31,7 @@ final class ORM_Pool {
 	static function set($oname, $oid, $object, $ref_count=0) {
 		$key = self::key($oname, $oid);
 
-		$o = self::$POOL[$key];
+		$o = (object) self::$POOL[$key];
 		if ($o->object === $object) {
 			$o->ref_count += $ref_count;
 		}

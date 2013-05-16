@@ -84,7 +84,7 @@ abstract class _View {
 
 		$event = $category ? "view[{$category}:{$path}].prerender ":'';
 		$event .= "view[{$path}].prerender view.prerender";
-		
+
 		Event::trigger($event, $this);
 
 		$v = $this;
@@ -100,7 +100,7 @@ abstract class _View {
 		if (!$_path) {
 			$_path=Core::file_exists(VIEW_BASE.$path.VEXT, $category);
 		}
-		
+
 		$output = $this->_include_view($_path, $_vars);
 
 		$event = $category ? "view[{$category}:{$path}].postrender ":'';

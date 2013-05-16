@@ -74,7 +74,7 @@ abstract class _I18N {
 			if ($lang === NULL) {
 				$lang = array();
 				foreach (array_reverse(Core::file_paths(I18N_BASE.$locale.EXT, $domain)) as $path) {
-					@include $path;
+					!file_exists($path) or @include $path;
 				}
 				$cache->set($cache_key, $lang);
 			}
