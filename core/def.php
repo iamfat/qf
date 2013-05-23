@@ -31,14 +31,16 @@ define('DEFAULT_VIEW', 'html');
 define('EXT', '.php');
 define('VEXT', '.phtml');
 
+if (PHP_SAPI != 'cli') {
+	if (extension_loaded('xcache') && ini_get('xcache.var_size')) {
+		define('DEFAULT_CACHE', 'xcache');
+	}
+	elseif (extension_loaded('apc')) {
+		define('DEFAULT_CACHE', 'apc');
+	}
+}
 
-if (extension_loaded('xcache') && ini_get('xcache.var_size')) {
-	define('DEFAULT_CACHE', 'xcache');
-}
-elseif (extension_loaded('apc')) {
-	define('DEFAULT_CACHE', 'apc');
-}
-else {
+if (!defined('DEFAULT_CACHE')) {
 	define('DEFAULT_CACHE', 'nocache');
 }
 
