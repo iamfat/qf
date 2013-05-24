@@ -34,7 +34,8 @@ final class CLI {
 	}
 
 	static function error($errno , $errstr, $errfile, $errline, $errcontext) {
-		throw new \ErrorException($errstr, $errno, 1, $errfile, $errline);
+		error_log(sprintf("\x1b[31m\x1b[4mERROR\x1b[0m \x1b[1m%s (%s:%d) \x1b[0m", $errstr, $errfile, $errline));
+		// throw new \ErrorException($errstr, $errno, 1, $errfile, $errline);
 	}
 
 	static function assertion($file, $line, $code) {
