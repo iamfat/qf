@@ -70,13 +70,15 @@ abstract class _Auth {
 		$opts = (array) Config::get('auth.backends');
 		$opt = $opts[$backend];
 		
-		assert($opt['handler']);	//handler必须存在
+		if (!$opt['handler']) return;	//handler必须存在
 
 		$opt['backend'] = $backend;		//将backend传入
 
 		$this->options = $opt;
 		$this->token = $token;
 		$class = 'Auth_'.ucwords($opt['handler']);
+		if (!class_exists($class)) return;
+
 		$this->handler = new $class($opt);
 	}
 
@@ -90,6 +92,7 @@ abstract class _Auth {
 	}
 
 	function create($password) {
+		if (!$this->handler) return FALSE;
 		if (!$this->token) return FALSE;
 		if ($this->options['readonly'] && !$this->options['allow_create']) return TRUE;
 		return $this->handler->add($this->token, $password);
@@ -97,12 +100,14 @@ abstract class _Auth {
 
 	//验证令牌/密码对
 	function verify($password) {
+		if (!$this->handler) return FALSE;
 		if (!$this->token) return FALSE;
 		return $this->handler->verify($this->token, $password);
 	}
 
 	//更改用户令牌
 	function change_token($token_new){
+		if (!$this->handler) return FALSE;
 		if (!$this->token) return FALSE;
 		if ($this->options['readonly']) return TRUE;
 		$ret = $this->handler->change_token($this->token, $token_new);
@@ -114,6 +119,7 @@ abstract class _Auth {
 
 	//更改用户密码
 	function change_password($password){
+		if (!$this->handler) return FALSE;
 		if (!$this->token) return FALSE;
 		if ($this->options['readonly']) return TRUE;
 		return $this->handler->change_password($this->token, $password);
@@ -121,6 +127,7 @@ abstract class _Auth {
 	
 	//删除令牌/密码对
 	function remove(){
+		if (!$this->handler) return FALSE;
 		if (!$this->token) return FALSE;
 		if ($this->options['readonly']) return TRUE;
 		return $this->handler->remove($this->token);
