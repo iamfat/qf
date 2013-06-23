@@ -43,7 +43,7 @@ abstract class _Config {
 			$dh = opendir($base);
 			if ($dh) {
 				while($file = readdir($dh)) {
-					if ($file[0] == '.') continue;
+					if ($file[0] == '.' || 0 !== @substr_compare($file, EXT, - strlen(EXT))) continue;
 					self::_load(basename($file, EXT), $base . $file);
 				}
 				closedir($dh);
