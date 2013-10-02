@@ -15,7 +15,7 @@ final class Cache {
 	static $CACHE_PREFIX;
 
 	static function normalize_key($key) {
-		return self::$CACHE_PREFIX.':'.$key;
+		return md5(self::$CACHE_PREFIX.':'.$key);
 	}
 
 	/*

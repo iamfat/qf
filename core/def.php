@@ -32,7 +32,10 @@ define('EXT', '.php');
 define('VEXT', '.phtml');
 
 if (PHP_SAPI != 'cli') {
-	if (extension_loaded('xcache') && ini_get('xcache.var_size')) {
+	if (extension_loaded('yac')) {
+		define('DEFAULT_CACHE', 'yac');
+	}
+	elseif (extension_loaded('xcache') && ini_get('xcache.var_size')) {
 		define('DEFAULT_CACHE', 'xcache');
 	}
 	elseif (extension_loaded('apc')) {

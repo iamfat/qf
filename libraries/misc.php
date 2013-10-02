@@ -65,7 +65,7 @@ abstract class _Misc {
 	static function key() {
 		$args = func_get_args();
 		array_unshift($args, self::$_key_prefix);
-		return hash('md4', implode('.', $args));
+		return hash('md5', implode('.', $args));
 	}
 	
 	static function random_password($length=12, $level=3) {
