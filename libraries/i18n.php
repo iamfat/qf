@@ -70,8 +70,8 @@ abstract class _I18N {
 			$cache = Cache::factory();
 			$locale = self::$locale;
 			$cache_key = "i18n/$locale/$domain";
-			$lang = Config::get('debug.i18n_nocache') ? NULL : $cache->get($cache_key);
-			if ($lang === NULL) {
+			$lang = Config::get('debug.i18n_nocache') ? false : $cache->get($cache_key);
+			if ($lang === false) {
 				$lang = array();
 				foreach (array_reverse(Core::file_paths(I18N_BASE.$locale.EXT, $domain)) as $path) {
 					!file_exists($path) or @include $path;

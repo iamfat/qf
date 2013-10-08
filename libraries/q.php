@@ -79,13 +79,16 @@ abstract class _Q extends ORM_Iterator {
 	private $_is_parsed = FALSE;
 	function parse() {
 		if (!$this->_is_parsed) {
+
+			$cache_data = false;
+
 			$cache_key = Misc::key('Q:', $this->selector);
 			$cache = Cache::factory();
 			if (!Config::get('debug.Q_nocache', FALSE)) {
 				$cache_data = $cache->get($cache_key);
 			}
 
-			if (NULL === $cache_data) {
+			if (false === $cache_data) {
 				$query = $this->parse_selector();
 				$cache_data = array(
 					'name' => $query->name,

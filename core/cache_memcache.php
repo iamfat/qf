@@ -44,10 +44,8 @@ class Cache_Memcache implements Cache_Handler {
 	}
 	
 	function get($key) {
-		if (!$this->memcache) return NULL;
-		$ret = $this->memcache->get($key);
-		if ($ret === FALSE) return NULL;
-		return $ret;
+		if (!$this->memcache) return FALSE;
+		return $this->memcache->get($key);
 	}
 	
 	function remove($key) {
