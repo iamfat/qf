@@ -8,6 +8,7 @@ class Cache_NoCache implements Cache_Handler {
 	}
 	
 	function get($key) {
+		return false;
 	}
 	
 	function remove($key) {
