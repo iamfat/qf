@@ -245,12 +245,14 @@
 
 		$.each(_events, function(event, delay) {
 			$el.bind(event, function(e) {
-				var data = $el.data('_data') || {};
-				$.extend(data, Q.dynamicData(dynamics));
+				var data = $.extend({}, $el.data('_data') || {});
 
-				if ($el.is('form') && e.type=='submit') {
+			$.extend(data, Q.dynamicData(dynamics));
+
+			if ($el.is('form') && e.type=='submit') {
 					//check if it's a form containing files				
 					var $files = $('input:file', $el);
+
 					var found = false;
 
 					$files.each(function() {

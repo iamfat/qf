@@ -182,8 +182,7 @@ abstract class _ORM_Model {
 		$json_keys = self::json_keys($this_name);
 		if (isset($json_keys[$name])) {
 			$json_key = $name . self::JSON_SUFFIX;
-			$this->_data[$name] = @json_decode($this->_data[$json_key]);
-			return $this->_data[$name];
+			return @json_decode($this->_data[$json_key],true);
 		}
 
 		//如果schema中存在object 则从object_id/object_name获得实例化object
