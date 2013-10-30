@@ -10,7 +10,7 @@ class Cache_XCache implements Cache_Handler {
 	}
 	
 	function get($key) {
-        if (!ini_get('xcache.var_size')) return NULL;
+        if (!ini_get('xcache.var_size')) return FALSE;
 		return unserialize(strval(@xcache_get($key)));
 	}
 	

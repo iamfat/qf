@@ -13,9 +13,7 @@ class Cache_YAC implements Cache_Handler {
 	}
 	
 	function get($key) {
-		$ret = $this->_yac->get($key);
-		if ($ret === FALSE) return NULL;
-		return $ret;
+		return $this->_yac->get($key);
 	}
 	
 	function remove($key) {

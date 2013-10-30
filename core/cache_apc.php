@@ -9,9 +9,7 @@ class Cache_APC implements Cache_Handler {
 	}
 	
 	function get($key) {
-		$ret = @unserialize(strval(@apc_fetch($key)));
-		if ($ret === FALSE) return NULL;
-		return $ret;
+		return @unserialize(strval(@apc_fetch($key)));
 	}
 	
 	function remove($key) {
