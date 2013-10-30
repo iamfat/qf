@@ -63,9 +63,7 @@ final class Core {
 
 		$paths = self::$_module_paths[$base];
 		if (!isset($paths)) {
-			$inf = array();
-
-			$order = 0;
+			$inf = [];
 
 			$mbase = $base.MODULE_BASE;
 
@@ -77,7 +75,6 @@ final class Core {
 				$inf[$k] = (object) array(
 					'name' => $name,
 					'deps' => Core::_module_deps($name, $k),
-					'order' => $order++,
 				);
 				$excluded[$name] = TRUE;
 			}
@@ -90,26 +87,28 @@ final class Core {
 				$inf[$k] = (object) array(
 					'name' => $name,
 					'deps' => Core::_module_deps($name, $k),
-					'order' => $order++,
 				);
 			}
-
-
+            
 			//进行优先级排序
-			uasort($inf, function($a, $b) {
-				if (in_array($a->name, $b->deps)) {
-					return -1;
-				}
-				elseif (in_array($b->name, $a->deps)) {
-					return 1;
-				}
-
-				return $a->order - $b->order;
-			});
-
-			$paths = array();
+            $paths = [];
+            
+            $import = function($path, $o) use (&$paths, $inf, &$import){
+			    if ($o->deps) {
+			        foreach ($o->deps as $dep) {
+			            foreach ($inf as $k => $oo) {
+			                if ($dep != $oo->name) continue;
+                            if (isset($paths[$k])) continue;
+			                $import($k, $oo);
+			            }
+			        }
+			    }
+                $paths[$path] = $o->name;
+            };
+            
 			foreach ($inf as $k => $o) {
-				$paths[$k] = $o->name;
+                if (isset($paths[$k])) continue;
+                $import($k, $o);
 			}
 
 			self::$_module_paths[$base] = $paths;
@@ -503,3 +502,4 @@ final class Core {
 	}
 	
 }
+
