@@ -46,7 +46,7 @@ abstract class _File {
 			@rmdir($path);
 		}
 		else {
-			@unlink($path);
+			file_exists($path) and unlink($path);
 		}
 	}
 	

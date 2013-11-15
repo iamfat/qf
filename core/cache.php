@@ -138,7 +138,7 @@ final class Cache {
 	static function remove_cache_file($path) {
 		$cache_file = self::cache_filename($path);
 		$cache_path = ROOT_PATH.PUBLIC_BASE.$cache_file;
-		@unlink($cache_path);
+		file_exists($cache_path) and unlink($cache_path);
 	}
 }
 
