@@ -118,7 +118,8 @@ abstract class _HTTP {
 
 		curl_close($ch);
 		
-		$response->header = array();
+        $response = (object)[];
+		$response->header = [];
 		$response->body = NULL;
 		$response->error = FALSE;
 		
