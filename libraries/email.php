@@ -24,6 +24,7 @@ abstract class _Email {
 	
 	function __construct($sender=NULL){
 		if(is_null($sender)){
+            $sender = new stdClass;
 			$sender->email = Config::get('system.email_address');
 			$sender->name = Config::get('system.email_name', $sender->email);
 		}
