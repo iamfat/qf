@@ -79,7 +79,7 @@ abstract class _Date {
 		}
 		
 		$duration = max(0, $dto - $dfrom);
-		$output = '';
+		$output = [];
 		$zero = TRUE;
 		foreach ($factors as $k=>$v) {
 			$n = floor($duration / $v);

@@ -123,7 +123,7 @@ final class Cache {
 			if (!is_dir($dir)) {
 				mkdir($dir, 0755, true);
 			}
-			copy($path, $cache_path);
+			@copy($path, $cache_path);
 		}
 		return $cache_file;
 	}
