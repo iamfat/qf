@@ -91,7 +91,6 @@ final class ORM_Pool {
 abstract class _ORM_Model {
 
 	const RELA_PREFIX = '_r_';
-	const PROP_PREFIX = '_p_';
 	const OBJ_NAME_SUFFIX = '_name';
 	const OBJ_ID_SUFFIX = '_id';
 	const JSON_SUFFIX = '_json';
@@ -100,6 +99,8 @@ abstract class _ORM_Model {
 	private $_data = array('id'=>0);
 	private $_update = array();
 	private $_objects = array();
+
+    private $_extra_data = array();
 	
 	private $_O;	
 	function __sleep() {
@@ -252,14 +253,14 @@ abstract class _ORM_Model {
 		return $arr;
 	}
 
-	function name ($name=NULL) { 
-		return $name ? $this->_name = strtolower($name) : $this->_name; 
+	function name ($name=NULL) {
+		return $name ? $this->_name = strtolower($name) : $this->_name;
 	}
 	
 	function set_data($data) {
 		if (is_array($data)) {
 			$name = $this->_name;
-			if ($this->_data['id'] 
+			if ($this->_data['id']
 				&& $this === ORM_Pool::get($name, $this->_data['id'])) {
 				$ref_count = ORM_Pool::release($name, $this->_data['id']);
 			}
@@ -271,10 +272,18 @@ abstract class _ORM_Model {
 				ORM_Pool::set($name, $data['id'], $this, $ref_count);
 			}
 
+            $extra_data = (array) @json_decode($data['_extra'], true);
+            unset($data['_extra']);
+
+            $this->_extra_data = $extra_data;
 			$this->_data = $data;
 		}
 	}
 	
+    function get_extra_data() {
+        return $this->_extra_data;
+    }
+
 	function get_data() {
 		return $this->_data;
 	}
@@ -419,6 +428,7 @@ abstract class _ORM_Model {
 		
 		$name = $this->name();
 		$old_data = array();
+
 		$new_data = $this->_update;
 
 		//序列化$this->_update中的数据
@@ -434,6 +444,7 @@ abstract class _ORM_Model {
 		$json_keys = self::json_keys($name);
 		$data = array();
 		foreach ($new_data as $k=>$v) {
+            if ($k == '_extra') continue;
 			$old_data[$k] = $this->get($k, TRUE);
 			if (isset($object_keys[$k])) {
 				$kname = $k . self::OBJ_ID_SUFFIX;
@@ -460,10 +471,17 @@ abstract class _ORM_Model {
 				}
 			}
 			else {
+                //附加列
 				$extra_data[$k] = $v;
 			}
 			
 		}
+
+        if (count($extra_data)) {
+            $old_extra_data = $this->get_extra_data();
+            $all_extra_data = array_merge($old_extra_data, $extra_data);
+            $data[$name]['_extra'] = @json_encode($all_extra_data);
+        }
 
 		$old_id = $id = $this->_data['id'];
 		$db = self::db($name);
@@ -482,7 +500,8 @@ abstract class _ORM_Model {
 			foreach ($data as $rname => &$d) {
 				$this->set_data($d + $this->_data);
 			}
-			
+            //success后，需要同步更新properties数据
+            P($this)->set($all_extra_data);
 		}
 		else {
 			$db->rollback();
@@ -496,10 +515,6 @@ abstract class _ORM_Model {
 
 		$this->_update = array();
 		$this->release_objects();
-		
-		if (count($extra_data)>0 && $id) {
-			Properties::factory($this)->set($extra_data)->save();
-		}
 
 		if (FALSE === $this->trigger_event('saved', $old_data, $new_data)) {
 			return FALSE;
@@ -575,16 +590,16 @@ abstract class _ORM_Model {
 		$conn_table = self::RELA_PREFIX.$name1.'_'.$name2;
 
 		$db->prepare_table($conn_table,
-			array( 
+			array(
 				//fields
 			'fields' => array(
 					'id1'=>array('type'=>'bigint', 'null'=>FALSE),
 					'id2'=>array('type'=>'bigint', 'null'=>FALSE),
 					'type'=>array('type'=>'varchar(20)', 'null'=>FALSE),
 					'approved'=>array('type'=>'int', 'null'=>FALSE, 'default'=>0),
-				), 
+				),
 				//indexes
-			'indexes' => array( 
+			'indexes' => array(
 					'PRIMARY'=>array('type'=>'primary', 'fields'=>array('id1', 'id2', 'type')),
 					'id1'=>array('fields'=>array('id1', 'type')),
 					'id2'=>array('fields'=>array('id2', 'type')),
@@ -671,7 +686,7 @@ abstract class _ORM_Model {
 		$table=self::RELA_PREFIX.$name1.'_'.$name2;
 		
 		$ret = array();
-		$rs = $db->query('SELECT * FROM `%s` WHERE id1 = %d AND id2 = %d', $table, $id1, $id2); 
+		$rs = $db->query('SELECT * FROM `%s` WHERE id1 = %d AND id2 = %d', $table, $id1, $id2);
 		if ($rs) while ($row = $rs->row('assoc')) {
 			$type = $row['type'];
 			unset($row['id1']);
@@ -743,7 +758,10 @@ abstract class _ORM_Model {
 			if (!isset($class_schema['fields']['id'])) {
 				$class_schema['fields']['id'] = array('type'=>'bigint', 'null'=>FALSE, 'auto_increment'=>TRUE);
 			}
-			
+
+            //增加_extra列
+            $class_schema['fields']['_extra'] = array('type'=> 'text', 'null'=> TRUE);
+
 			if (!$class_schema['indexes']) {
 				$class_schema['indexes'] = array();
 			}
@@ -765,7 +783,7 @@ abstract class _ORM_Model {
 				case 'object':
 					if ($data['oname']) {
 						$object_keys[$key]['oname'] = $data['oname'];
-					} 
+					}
 					else {
 						$oname = $key.self::OBJ_NAME_SUFFIX;
 						$fields[$oname] = array('type'=>'varchar(40)', 'null'=>FALSE, 'default'=>'');
@@ -839,7 +857,7 @@ abstract class _ORM_Model {
 		$class_name=$name.MODEL_SUFFIX;
 		if (class_exists($class_name) && is_subclass_of($class_name, 'ORM_Model')) {
 			$object = new $class_name;
-		} 
+		}
 		else {
 			$object = new ORM_Model;
 		}
@@ -853,7 +871,7 @@ abstract class _ORM_Model {
 
 			if ($no_fetch) {
 				$data = (array) $criteria;
-			} 
+			}
 			else {
 
 				if (is_scalar($criteria)) {
@@ -869,8 +887,8 @@ abstract class _ORM_Model {
 					$where[] = $db->quote_ident($k) . '=' . $db->quote($v);
 				}
 				
-				// SELECT * from a JOIN b, c ON b.id=a.id AND c.id = b.id AND b.attr_b='xxx' WHERE a.attr_a = 'xxx'; 
-				$SQL = 'SELECT * FROM '.$db->quote_ident($real_name).' WHERE '.implode(' AND ', $where).' LIMIT 1'; 
+				// SELECT * from a JOIN b, c ON b.id=a.id AND c.id = b.id AND b.attr_b='xxx' WHERE a.attr_a = 'xxx';
+				$SQL = 'SELECT * FROM '.$db->quote_ident($real_name).' WHERE '.implode(' AND ', $where).' LIMIT 1';
 				
 				$result = $db->query($SQL);
 				//只取第一条记录
@@ -1026,7 +1044,7 @@ abstract class _ORM_Model {
 				if ($rname == '') break;
 				$real_names[] = $rname;
 				$rname = self::parent_name($rname);
-			} 
+			}
 			while ($rname);
 			$rn_cache[$name] = $real_names;
 		}

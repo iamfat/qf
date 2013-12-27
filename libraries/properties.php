@@ -19,16 +19,12 @@ abstract class _Properties {
 		$id = $object->id;
 		
 		$db = ORM_Model::db($name);
-		$table = ORM_Model::PROP_PREFIX.$name;
-
-		$code = $db->value('SELECT `data` FROM `%s` WHERE `id`=%d', $table, $id);
 
 		//$data = @unserialize(@base64_decode($code)?:$code);
 		// TO BE REMOVED: 这两种形式 哪种兼容性更好一些? Jia Huang @ 2010.12.19
 		//
-		$data = (array) (@unserialize($code) ?: @unserialize(base64_decode($code)));
 
-		$this->_items = $data;
+        $this->_items = $object->get_extra_data();
 	}
 	
 	function & __get($name) {
@@ -67,32 +63,24 @@ abstract class _Properties {
 	function delete() {
 		$name = $this->_object->name();
 		$db = ORM_Model::db($name);
-		$table=ORM_Model::PROP_PREFIX.$name;
+
 		$id = $this->_object->id;
-		$db->query('DELETE FROM `%s` WHERE `id`=%d', $table, $id);
+
+        $db->query('UPDATE `%s` SET `_extra` = NULL WHERE `id` = %d', $name, $id);
+
 		return $this;
 	}
 	
 	function save(){
 		if($this->_updated){
-			$data = @serialize($this->_items);
 			$name = $this->_object->name();
-			$db = ORM_Model::db($name);
-			$table=ORM_Model::PROP_PREFIX.$name;
-			$db->prepare_table($table, 
-				array(
-					'fields' => array(
-						'id'=>array('type'=>'bigint', 'null'=>FALSE, 'default' => 0),
-						'data'=>array('type'=>'blob', 'null'=>TRUE),
-					), 
-					'indexes' => array( 
-						'PRIMARY'=>array('type'=>'primary', 'fields'=>array('id')),
-					)
-				)
-			);
 
-			$id = $this->_object->id;
-			$db->query('INSERT INTO `%1$s` VALUES (%2$d, "%3$s") ON DUPLICATE KEY UPDATE `data`="%3$s"', $table, $id, base64_encode($data));
+            //修正表结构
+            $db = ORM_Model::db($name);
+
+            $id = $this->_object->id;
+
+            $db->query('UPDATE `%s` SET `_extra` = "%s" WHERE `id` = %d', $name, @json_encode($this->_items), $id);
 
 			$this->_updated = FALSE;
 			
