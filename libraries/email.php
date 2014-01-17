@@ -31,7 +31,7 @@ abstract class _Email {
 
 		$this->from($sender->email, $sender->name);
 	}
-	
+
 	private function make_header() {
 		$header = (array) $this->_header;
 
@@ -42,11 +42,16 @@ abstract class _Email {
 		$header['Message-ID']=$this->get_message_id();		
 		$header['Mime-Version']='1.0';
 		if ($this->_multi) {
-			$header['Content-Type']='multipart/alternative; boundary='.$this->_multi.'';   
+            if ($this->has_attachment()) {
+                $header['Content-Type'] = 'multipart/mixed; boundary='. $this->_multi;
+            }
+            else {
+                $header['Content-Type']='multipart/alternative; boundary='.$this->_multi.'';
+            }
 		}
 		else {
 			$header['Content-Transfer-Encoding']='8bit';
-			$header['Content-Type']='text/plain; charset="UTF-8"';   
+			$header['Content-Type']='text/plain; charset="UTF-8"';
 		}
 
 		$header_content = '';
@@ -56,7 +61,38 @@ abstract class _Email {
 
 		return $header_content;
 	}
-	
+
+    private $_body_text, $_body_html;
+
+    private function make_body() {
+
+
+        if ($this->has_attachment()) {
+
+            $_body .= "--{$this->_multi}\n";
+            $_body .= "Content-Type: text/html; charset=\"UTF-8\"\nContent-Transfer-Encoding: 8bit\n\n";
+            //存在attachment时,只发送html
+            $this->_body_html = $this->_body_html ? : $this->_body_text;
+            $_body .= stripslashes(rtrim(str_replace("\r", "", $this->_body_html))). "<br />\n\n";
+            $_body .= $this->attachment_body();
+        }
+        else {
+            $_body .= "--{$this->_multi}\n";
+            $_body .= "Content-Type: text/plain; charset=\"UTF-8\"\nContent-Transfer-Encoding: 8bit\n\n";
+            $_body .= stripslashes(rtrim(str_replace("\r", "", $this->_body_text))). "\n\n\n";
+
+            if ($this->_body_html) {
+                $_body .= "--{$this->_multi}\n";
+                $_body .= "Content-Type: text/html; charset=\"UTF-8\"\nContent-Transfer-Encoding: 8bit\n\n";
+                $_body .= stripslashes(rtrim(str_replace("\r", "", $this->_body_html))). "\n\n\n";
+            }
+        }
+
+        $_body .= "\n--{$this->_multi}--\n\n";
+
+        return $_body;
+    }
+
 	function clear(){
 		unset($this->_recipients);
 		unset($this->_subject);
@@ -78,12 +114,13 @@ abstract class _Email {
 		}
 		else {		
 			$subject = $this->encode_text($this->_subject);
-			$body = $this->_body;
 			
 			$recipients = $this->_header['To'];
 			unset($this->_header['To']);
 
 			$header = $this->make_header();
+            $body = $this->make_body();
+
 			$success = mail($recipients, $subject, $body, $header);
 		}
 		
@@ -112,7 +149,7 @@ abstract class _Email {
 
 		$this->_reply_to = $email;
 	}
- 
+
 	function to($email, $name=NULL)
 	{
 		if (is_array($email)) {
@@ -153,13 +190,8 @@ abstract class _Email {
 		}
 		else {
 			$this->_multi='GENEE-'.md5(Date::time());
-			$this->_body.="--{$this->_multi}\n";
-			$this->_body.="Content-Type: text/plain; charset=\"UTF-8\"\nContent-Transfer-Encoding: 8bit\n\n";
-			$this->_body.= stripslashes(rtrim(str_replace("\r", "", $text)));	
-			$this->_body.="\n\n--{$this->_multi}\n";
-			$this->_body.="Content-Type: text/html; charset=\"UTF-8\"\nContent-Transfer-Encoding: 8bit\n\n";
-			$this->_body.= stripslashes(rtrim(str_replace("\r", "", $html)));	
-			$this->_body.="\n--{$this->_multi}--\n\n";
+            $this->_body_text = $text;
+            $this->_body_html = $html;
 		}
 	}
 	
@@ -179,4 +211,30 @@ abstract class _Email {
 		return sprintf("%s %s%04d", date("D, j M Y H:i:s"), $operator, $timezone);		
 	}
 
+    private $_attachment = array();
+    function attachment($files = '') {
+        if (!is_array($files)) $files = array($files);
+
+        foreach($files as $file) {
+            //增加到attachment中
+            $this->_attachment[$file] = basename($file);
+        }
+    }
+
+    private function has_attachment() {
+        return count($this->_attachment);
+    }
+
+    private function attachment_body() {
+        foreach($this->_attachment as $path => $file) {
+            $attah_data[] = sprintf('--%s', $this->_multi);
+            $attah_data[] = sprintf('Content-Type: application/octet-stream; name="%s"', $file);
+            $attah_data[] = 'Content-Transfer-Encoding: binary';
+            $attah_data[] = 'Content-Disposition: attachment';
+            $attah_data[]  = sprintf('filename="%s"', $file);
+            $attah_data[] = file_get_contents($path);
+        }
+
+        return join("\n", $attah_data);
+    }
 }
