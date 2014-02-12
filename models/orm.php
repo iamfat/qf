@@ -501,7 +501,7 @@ abstract class _ORM_Model {
 				$this->set_data($d + $this->_data);
 			}
             //success后，需要同步更新properties数据
-            P($this)->set($all_extra_data);
+            if(count($all_extra_data)) P($this)->set($all_extra_data);
 		}
 		else {
 			$db->rollback();
