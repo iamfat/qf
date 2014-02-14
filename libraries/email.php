@@ -121,7 +121,7 @@ abstract class _Email {
 			$header = $this->make_header();
             $body = $this->make_body();
 
-			$success = mail($recipients, $subject, $body, $header);
+            $success = mail($recipients, $subject, $body, $header);
 		}
 		
 		$subject = $this->_subject;
@@ -227,14 +227,15 @@ abstract class _Email {
 
     private function attachment_body() {
         foreach($this->_attachment as $path => $file) {
-            $attah_data[] = sprintf('--%s', $this->_multi);
-            $attah_data[] = sprintf('Content-Type: application/octet-stream; name="%s"', $file);
-            $attah_data[] = 'Content-Transfer-Encoding: binary';
-            $attah_data[] = 'Content-Disposition: attachment';
-            $attah_data[]  = sprintf('filename="%s"', $file);
-            $attah_data[] = file_get_contents($path);
+            $attach_data[] = sprintf('--%s', $this->_multi);
+            $attach_data[] = sprintf('Content-Type: application/octet-stream; name="%s"',  File::mine_type($file)? : 'octet-stream', $file);
+            $attach_data[] = 'Content-Transfer-Encoding: base64';
+            $attach_data[] = 'Content-Disposition: attachment';
+            $attach_data[] = sprintf('filename="%s"', $file);
+            $attach_data[] = NULL; //需要占位，这样mail发送才能正常进行解析
+            $attach_data[] = chunk_split(@base64_encode(@file_get_contents($path)));
         }
 
-        return join("\n", $attah_data);
+        return join("\n", $attach_data);
     }
 }
