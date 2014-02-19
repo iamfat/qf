@@ -228,11 +228,11 @@ abstract class _Email {
     private function attachment_body() {
         foreach($this->_attachment as $path => $file) {
             $attach_data[] = sprintf('--%s', $this->_multi);
-            $attach_data[] = sprintf('Content-Type: application/octet-stream; name="%s"',  File::mine_type($file)? : 'octet-stream', $file);
+            $attach_data[] = sprintf('Content-Type: %s; name="%s"',  File::mine_type($file) ? : 'application/octet-stream', $file);
             $attach_data[] = 'Content-Transfer-Encoding: base64';
             $attach_data[] = 'Content-Disposition: attachment';
             $attach_data[] = sprintf('filename="%s"', $file);
-            $attach_data[] = NULL; //需要占位，这样mail发送才能正常进行解析
+            $attach_data[] = NULL; //需要占位，这样mail发送才能正常进行解析附件
             $attach_data[] = chunk_split(@base64_encode(@file_get_contents($path)));
         }
 
