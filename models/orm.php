@@ -477,12 +477,6 @@ abstract class _ORM_Model {
 			
 		}
 
-        if (count($extra_data)) {
-            $old_extra_data = $this->get_extra_data();
-            $all_extra_data = array_merge($old_extra_data, $extra_data);
-            $data[$name]['_extra'] = @json_encode($all_extra_data);
-        }
-
 		$old_id = $id = $this->_data['id'];
 		$db = self::db($name);
 		$db->begin_transaction();
@@ -500,8 +494,9 @@ abstract class _ORM_Model {
 			foreach ($data as $rname => &$d) {
 				$this->set_data($d + $this->_data);
 			}
+
             //success后，需要同步更新properties数据
-            if(count($all_extra_data)) P($this)->set($all_extra_data);
+            if($this->id) Properties::factory($this)->set($extra_data)->save();
 		}
 		else {
 			$db->rollback();
