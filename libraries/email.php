@@ -62,33 +62,34 @@ abstract class _Email {
 		return $header_content;
 	}
 
-    private $_body_text, $_body_html;
+	private $_body_text, $_body_html;
 
-    private function make_body() {
+	private function make_body() {
 
 
-        if ($this->has_attachment()) {
+		if ($this->has_attachment()) {
 
-            $_body .= "--{$this->_multi}\n";
-            $_body .= "Content-Type: text/html; charset=\"UTF-8\"\nContent-Transfer-Encoding: 8bit\n\n";
-            //存在attachment时,只发送html
-            $this->_body_html = $this->_body_html ? : $this->_body_text;
-            $_body .= stripslashes(rtrim(str_replace("\r", "", $this->_body_html))). "<br />\n\n";
-            $_body .= $this->attachment_body();
-        }
-        else {
-            $_body .= "--{$this->_multi}\n";
-            $_body .= "Content-Type: text/plain; charset=\"UTF-8\"\nContent-Transfer-Encoding: 8bit\n\n";
-            $_body .= stripslashes(rtrim(str_replace("\r", "", $this->_body_text))). "\n\n\n";
-
-            if ($this->_body_html) {
-                $_body .= "--{$this->_multi}\n";
-                $_body .= "Content-Type: text/html; charset=\"UTF-8\"\nContent-Transfer-Encoding: 8bit\n\n";
-                $_body .= stripslashes(rtrim(str_replace("\r", "", $this->_body_html))). "\n\n\n";
-            }
-        }
-
-        $_body .= "\n--{$this->_multi}--\n\n";
+			$_body .= "--{$this->_multi}\n";
+			$_body .= "Content-Type: text/html; charset=\"UTF-8\"\nContent-Transfer-Encoding: 8bit\n\n";
+			//存在attachment时,只发送html
+			$this->_body_html = $this->_body_html ? : $this->_body_text;
+			$_body .= stripslashes(rtrim(str_replace("\r", "", $this->_body_html))). "<br />\n\n";
+			$_body .= $this->attachment_body();
+			$_body .= "\n--{$this->_multi}--\n\n";
+		}
+		else {
+			if ($this->_body_html) {
+				$_body .= "--{$this->_multi}\n";
+				$_body .= "Content-Type: text/plain; charset=\"UTF-8\"\nContent-Transfer-Encoding: 8bit\n\n";
+				$_body .= stripslashes(rtrim(str_replace("\r", "", $this->_body_text))). "\n\n\n";
+				$_body .= "--{$this->_multi}\n";
+				$_body .= "Content-Type: text/html; charset=\"UTF-8\"\nContent-Transfer-Encoding: 8bit\n\n";
+				$_body .= stripslashes(rtrim(str_replace("\r", "", $this->_body_html))). "\n\n\n";
+			}
+			else {
+				$_body = $this->_body_text;
+			}
+		}
 
         return $_body;
     }
@@ -185,13 +186,13 @@ abstract class _Email {
   	
 	function body($text, $html=NULL){
 		if (!$html) {
-			$this->_multi=NULL;
-			$this->_body=$text;
+			$this->_multi = NULL;
+			$this->_body_text = $text;
 		}
 		else {
 			$this->_multi='GENEE-'.md5(Date::time());
-            $this->_body_text = $text;
-            $this->_body_html = $html;
+			$this->_body_text = $text;
+			$this->_body_html = $html;
 		}
 	}
 	
