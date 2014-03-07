@@ -99,8 +99,6 @@ abstract class _ORM_Model {
 	private $_data = array('id'=>0);
 	private $_update = array();
 	private $_objects = array();
-
-    private $_extra_data = array();
 	
 	private $_O;	
 	function __sleep() {
@@ -272,18 +270,12 @@ abstract class _ORM_Model {
 				ORM_Pool::set($name, $data['id'], $this, $ref_count);
 			}
 
-            $extra_data = (array) @json_decode($data['_extra'], true);
             unset($data['_extra']);
 
-            $this->_extra_data = $extra_data;
 			$this->_data = $data;
 		}
 	}
 	
-    function get_extra_data() {
-        return $this->_extra_data;
-    }
-
 	function get_data() {
 		return $this->_data;
 	}
@@ -425,7 +417,7 @@ abstract class _ORM_Model {
 
 		if (FALSE === $this->trigger_event('before_save', $this->_update))
 			return FALSE;
-		
+
 		$name = $this->name();
 		$old_data = array();
 
@@ -443,6 +435,8 @@ abstract class _ORM_Model {
 		*/
 		$json_keys = self::json_keys($name);
 		$data = array();
+
+        $extra_data = array();
 		foreach ($new_data as $k=>$v) {
             if ($k == '_extra') continue;
 			$old_data[$k] = $this->get($k, TRUE);
@@ -496,7 +490,7 @@ abstract class _ORM_Model {
 			}
 
             //success后，需要同步更新properties数据
-            if($this->id) Properties::factory($this)->set($extra_data)->save();
+            if($this->id && count($extra_data)) Properties::factory($this)->set($extra_data)->save();
 		}
 		else {
 			$db->rollback();

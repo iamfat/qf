@@ -24,7 +24,7 @@ abstract class _Properties {
 		// TO BE REMOVED: 这两种形式 哪种兼容性更好一些? Jia Huang @ 2010.12.19
 		//
 
-        $this->_items = $object->get_extra_data();
+        $this->_items = @json_decode($db->value('SELECT `_extra` FROM `%s` WHERE `id`=%d', $name, $id), TRUE);
 	}
 	
 	function & __get($name) {
