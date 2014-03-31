@@ -36,6 +36,9 @@ final class Database {
 	static $query_count = 0;
 	static $cache_hits = 0;
 
+	const TIMEOUT_VAL = 2;
+	public $timeout = 0;
+
 	private $_handle;
 	private $_url;
 	private $_info;
@@ -61,16 +64,30 @@ final class Database {
 	}	
 	
 	static function shutdown($name=NULL) {
-		if(!$name) $name = Config::get('database.default');
+		if (!$name) $name = Config::get('database.default');
 	
-		if(!isset(self::$DB[$name])){
+		if (isset(self::$DB[$name])) {
 			self::$DB[$name]->disconnect();
 			unset(self::$DB[$name]);
 		}
 	}
 
 	static function reset() {
+		foreach ((array) self::$DB as $name => $db) {
+			$db->disconnect();
+		}
 		self::$DB = array();
+	}
+
+	static function cleanup_timeout() {
+		$now = time();
+		$dbs = (array) self::$DB;
+		foreach ($dbs as $name => $db) {
+			if ($db->timeout < $now) {
+				$db->disconnect();
+				unset(self::$DB[$name]);
+			}
+		}
 	}
 	
 	function __construct($url=NULL){
@@ -84,6 +101,8 @@ final class Database {
 		$this->_info['user'] = urldecode($url['user']);
 		$this->_info['password']  = isset($url['pass']) ? urldecode($url['pass']) : NULL;
 		
+		$this->timeout = time() + self::TIMEOUT_VAL;
+
 		$this->connect();
 	}
 
@@ -161,6 +180,8 @@ final class Database {
 		}
 			
 		self::$query_count++;
+
+		$this->timeout = time() + self::TIMEOUT_VAL;
 
 		return $this->_handle->query($SQL);
 	}
