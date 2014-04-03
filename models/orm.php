@@ -489,8 +489,6 @@ abstract class _ORM_Model {
 				$this->set_data($d + $this->_data);
 			}
 
-            //success后，需要同步更新properties数据
-            if($this->id && count($extra_data)) Properties::factory($this)->set($extra_data)->save();
 		}
 		else {
 			$db->rollback();
@@ -504,6 +502,9 @@ abstract class _ORM_Model {
 
 		$this->_update = array();
 		$this->release_objects();
+
+        //success后，需要同步更新properties数据
+        if ($this->id && count($extra_data)) Properties::factory($this)->set($extra_data)->save();
 
 		if (FALSE === $this->trigger_event('saved', $old_data, $new_data)) {
 			return FALSE;
