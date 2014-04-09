@@ -61,13 +61,13 @@ abstract class _Email {
             }
         }
 
-        //最后进行换行
-        $header[] = NULL;
-
         $header_content = '';
         foreach($header as $k=>$v){
             $header_content .= "$k: $v\n";
         }
+
+        //进行换行
+        $header_content .= "\n";
 
         return $header_content;
     }
@@ -129,7 +129,8 @@ abstract class _Email {
         $_body_html[] = 'Content-Transfer-Encoding: base64';
         $_body_html[] = NULL;
 
-        if ($this->_has_attachment) $this->_body_html = $this->_body_html ? : $this->_body_plain;
+        //存在attachment但是不存在html, 解析plain为html, 增加换行
+        if ($this->_has_attachment) $this->_body_html = ($this->_body_html ? : $this->_body_plain). '<br />';
 
         $_body_html[] = chunk_split(base64_encode($this->_body_html));
         $_body_html[] = NULL;
