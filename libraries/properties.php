@@ -80,7 +80,7 @@ abstract class _Properties {
 
             $id = $this->_object->id;
 
-            $db->query('UPDATE `%s` SET `_extra` = "%s" WHERE `id` = %d', $name, @json_encode($this->_items), $id);
+            $db->query('INSERT INTO `%1$s` (`id`, `_extra`) VALUES (%2$d, "%3$s") ON DUPLICATE KEY UPDATE `_extra`="%3$s"', $name, $id, @json_encode($this->_items, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES));
 
 			$this->_updated = FALSE;
 			
