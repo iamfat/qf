@@ -147,6 +147,7 @@ final class Database_MySQL implements Database_Handler {
 				$ret = $this->table_exists($tbl_name);
 			}
 			else {
+				$ret = TRUE;
 				$field_sql = array();
 				//检查所有Fields
 				$curr_fields = $this->table_fields($tbl_name);
@@ -211,9 +212,8 @@ final class Database_MySQL implements Database_Handler {
 				if (count($field_sql)>0) {
 					$quote_tbl_name = $this->quote_ident($tbl_name);
 					$quote_field_sql = implode(', ', $field_sql);
-					$this->query("ALTER TABLE $quote_tbl_name $quote_field_sql");
+					$ret = $this->query("ALTER TABLE $quote_tbl_name $quote_field_sql");
 				}
-				$ret = TRUE;
 			}
 			$this->_prepared_tables[$tbl_name] = $ret;
 		}
@@ -326,7 +326,6 @@ final class Database_MySQL implements Database_Handler {
 		}
 		
 		$SQL = sprintf('CREATE TABLE %s ( %s ) ENGINE = %s DEFAULT CHARSET = utf8', $this->quote_ident($tbl_name), implode(',', array_merge($field_sql, $index_sql)), $engine);
-		
 		$rs=$this->query($SQL);
 		
 		if($rs){
