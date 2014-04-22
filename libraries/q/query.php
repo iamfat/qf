@@ -661,6 +661,14 @@ class Q_Query {
 			if ($this->union) {
 				$SQL = '('.$SQL.') UNION ('.implode(') UNION (', $this->union).')';
 				$count_SQL = 'SELECT COUNT(*) count FROM ('.$SQL.') union_table';
+            }
+
+            if($this->union || $this->join){
+                //为了保证id的唯一
+                $SQL .= ' GROUP BY '.$db->make_ident($this->table, 'id');
+            }
+
+            if($this->union){
 				if ($this->order_by) {
 					$order_by = array();
 					//从ORDER_BY字符串中移除个别表名称, 因为对UNION表的排序不能使用个别表的field
@@ -689,8 +697,18 @@ class Q_Query {
 				$SQL .= ' LIMIT '.$this->limit;
 			}
 
-			$this->from_SQL = $SQL;
-			$this->SQL = 'SELECT DISTINCT '.$db->make_ident($this->table, 'id').' FROM '.$SQL;
+            $schema = ORM_Model::schema($this->name);
+            //从schema中得到fields，优化查询
+            $fields = $schema['fields'] ? array_keys($schema['fields']) : ['id'];
+
+            //多个表join后，可能有相同名称的字段，所以需要make_ident加以区分
+            $fields = array_map(function($f) use($db){
+                    return $db->make_ident($this->table, $f);
+                    }, $fields);
+            $fields = join(',', $fields);
+
+            $this->from_SQL = $SQL;
+            $this->SQL = 'SELECT '.$fields.' FROM '.$SQL;
 			$this->count_SQL = 'SELECT COUNT(DISTINCT '.$db->make_ident($this->table, 'id').') count FROM ' . $count_SQL;
 
 		}

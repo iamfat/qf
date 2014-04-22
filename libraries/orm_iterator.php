@@ -69,11 +69,16 @@ abstract class _ORM_Iterator implements Iterator, ArrayAccess, Countable {
 
 				$objects = array();
 
-				if ($result) {
-					while ($row=$result->row('assoc')) {
-						$objects[$row['id']] = O($this->name, $row['id']);
-					}
-				}
+                $schema = ORM_Model::schema($this->name);
+                $fields = array_keys($schema['fields']);
+                if ($result) {
+                    while ($row=$result->row('assoc')) {
+                        //创建空对象进行赋值
+                        $object = O($this->name);
+                        $object->set_data($row);
+                        $objects[$row['id']] = $object;
+                    }
+                }
 
 				$this->objects = $objects;
 				$this->length = count($objects);
