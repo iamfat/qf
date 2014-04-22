@@ -1066,17 +1066,7 @@ abstract class _ORM_Model {
 	
 	private static $_table_prepared = array();
 	static function db($name) {
-		
 		$db = Database::factory();
-
-		if (!isset(self::$_table_prepared[$name])) {
-			$schema = self::schema($name);
-			if ($schema) {
-				$db->prepare_table($name, $schema);
-			}
-			self::$_table_prepared[$name] = TRUE;
-		}
-		
 		return $db;
 	}
 	
