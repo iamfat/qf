@@ -879,7 +879,7 @@ abstract class _ORM_Model {
 
                 $schema = self::schema($name);
                 //从schema中得到fields，优化查询
-                $fields = $schema['fields'] ? $db->quote_ident(array_keys($schema['fields'])) : '`id`';
+                $fields = $schema['fields'] ? $db->quote_ident(array_keys($schema['fields'])) : $db->quote_ident('id');
 
                 // SELECT * from a JOIN b, c ON b.id=a.id AND c.id = b.id AND b.attr_b='xxx' WHERE a.attr_a = 'xxx';
                 $SQL = 'SELECT '.$fields.' FROM '.$db->quote_ident($real_name).' WHERE '.implode(' AND ', $where).' LIMIT 1';
