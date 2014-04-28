@@ -658,42 +658,17 @@ class Q_Query {
 
 			$SQL = trim($SQL);
 
-            if ($this->union) {
-                $SQL = '('.$SQL.') UNION ('.implode(') UNION (', $this->union).')';
-                $count_SQL = 'SELECT COUNT(*) count FROM ('.$SQL.') union_table';
-            }
-            else {
-                $count_SQL = $SQL;
-            }
+            $count_SQL = $SQL;
 
-            if ($this->union || $this->join) {
+            if ($this->join) {
                 //为了保证id的唯一
                 $SQL .= ' GROUP BY '.$db->make_ident($this->table, 'id');
             }
 
-            if ($this->union) {
-
-				if ($this->order_by) {
-					$order_by = array();
-					//从ORDER_BY字符串中移除个别表名称, 因为对UNION表的排序不能使用个别表的field
-					foreach($this->order_by as $o) {
-						if (preg_match('/^'.preg_quote($this->table).'\.(.+)$/', $o, $parts)) {
-							$order_by[] = $parts[1];
-						}
-					}
-					$SQL .= ' ORDER BY '.implode(', ', $order_by);
-				}
-				else {
-					$SQL .= ' ORDER BY '.$db->make_ident($this->table, 'id');
-				}
-			}
-			else {
-				if ($this->order_by) {
-					$SQL .= ' ORDER BY '.implode(', ', $this->order_by);
-				}
-				else {
-					$SQL .= ' ORDER BY '.$db->make_ident($this->table, 'id');
-				}
+			if ($this->order_by) {
+				$SQL .= ' ORDER BY '.implode(', ', $this->order_by);
+			} else {
+				$SQL .= ' ORDER BY '.$db->make_ident($this->table, 'id');
 			}
 
 			if ($this->limit) {
