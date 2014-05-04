@@ -77,33 +77,44 @@ abstract class _Q extends ORM_Iterator {
 	}
 
 	private $_is_parsed = FALSE;
+
+    protected $SQL;
+    protected $fields;
+    protected $count_SQL;
+    protected $sum_SQL;
+    protected $table;
+
 	function parse() {
 		if (!$this->_is_parsed) {
 
 			$cache_data = false;
 
 			$cache_key = Misc::key('Q:', $this->selector);
-			$cache = Cache::factory();
 			if (!Config::get('debug.Q_nocache', FALSE)) {
-				$cache_data = $cache->get($cache_key);
+                $cache = Cache::factory();
+                $cache_data = $cache->get($cache_key);
 			}
 
 			if (false === $cache_data) {
 				$query = $this->parse_selector();
 				$cache_data = array(
-					'name' => $query->name,
-					'SQL' => $query->SQL,
-					'count_SQL' => $query->count_SQL,
-					'sum_SQL' => 'SELECT SUM(`'.$query->table.'`.`%name`) FROM '.$query->from_SQL,
+                    'name' => $query->name,
+                    'fields'=> $query->fields,
+                    'SQL' => $query->SQL,
+                    'sum_SQL' => $query->sum_SQL,
+                    'count_SQL' => $query->count_SQL,
+                    'table'=> $query->table,
 				);
 
 				if ($cache) $cache->set($cache_key, $cache_data);
 			}
 
-			$this->name = $cache_data['name'];
-			$this->SQL = $cache_data['SQL'];
-			$this->count_SQL = $cache_data['count_SQL'];
-			$this->sum_SQL = $cache_data['sum_SQL'];
+            $this->table = $cache_data['table'];
+            $this->name = $cache_data['name'];
+            $this->SQL = $cache_data['SQL'];
+            $this->count_SQL = $cache_data['count_SQL'];
+            $this->sum_SQL = $cache_data['sum_SQL'];
+            $this->fields = $cache_data['fields'];
 
 			$this->_is_parsed = TRUE;
 		}
@@ -196,14 +207,15 @@ abstract class _Q extends ORM_Iterator {
 		return $this->objects[$id];
 	}
 
-
-	protected $sum_SQL;
-	function sum($name) {
-		$this->parse();
-		$SQL = strtr($this->sum_SQL, array('%name'=>$this->db->escape($name)));	
-		return $this->db->value($SQL);
-	}
-
+    function sum($name) {
+        $this->parse();
+        if (array_key_exists($name, $this->fields)) {
+            $SQL = strtr('SELECT SUM(`%table`. `%name`) FROM (SELECT `%table`. `%name` FROM %sum_SQL) `%table`', array(
+                '%table'=> $this->table,
+                '%name'=> $name,
+                '%sum_SQL'=> $this->sum_SQL,
+            ));
+            return $this->db->value($SQL);
+        }
+    }
 }
-
-
