@@ -12,12 +12,13 @@ class Q_Query {
 
 	private $stack = array();
 
-	public $db;	
-	public $name;
-	public $table;
-	public $SQL;
-	public $count_SQL;
-	public $from_SQL;
+    public $db;
+    public $name;
+    public $table;
+    public $SQL;
+    public $count_SQL;
+    public $sum_SQL;
+    public $fields;
 
 	public $prev_name;
 	public $prev_table;
@@ -160,7 +161,7 @@ class Q_Query {
 
 		if(!preg_match_all(self::PATTERN_FIELD_EXPRESSION, $part[1], $exps, PREG_SET_ORDER)) return;
 
-		$schema = $this->schema($this->name);
+        $schema = $this->schema($this->name);
 		$db = $this->db;
 
 		$where = array();
@@ -658,11 +659,12 @@ class Q_Query {
 
 			$SQL = trim($SQL);
 
-            $count_SQL = $SQL;
+            $sum_SQL = $count_SQL = $SQL;
 
             if ($this->join) {
                 //为了保证id的唯一
                 $SQL .= ' GROUP BY '.$db->make_ident($this->table, 'id');
+                $sum_SQL .= ' GROUP BY '.$db->make_ident($this->table, 'id');
             }
 
 			if ($this->order_by) {
@@ -685,13 +687,11 @@ class Q_Query {
                     }, $fields);
             $fields = join(',', $fields);
 
-            $this->from_SQL = $SQL;
             $this->SQL = 'SELECT '.$fields.' FROM '.$SQL;
-			$this->count_SQL = 'SELECT COUNT(DISTINCT '.$db->make_ident($this->table, 'id').') count FROM ' . $count_SQL;
-
+            $this->count_SQL = 'SELECT COUNT(DISTINCT '.$db->make_ident($this->table, 'id').') count FROM '. $count_SQL;
+            $this->sum_SQL = $sum_SQL;
+            $this->fields = $this->fields($this->name);
 		}
-
 	}
-
 }
 
