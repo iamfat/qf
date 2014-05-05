@@ -98,7 +98,7 @@ abstract class _Input {
 		}
 	}
 	
-	static function & form($name=NULL) {
+	static function form($name=NULL) {
 		if ($name) {
 			return Input::$form[$name];
 		} else {
