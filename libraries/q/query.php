@@ -15,9 +15,10 @@ class Q_Query {
 	public $db;	
 	public $name;
 	public $table;
-	public $SQL;
-	public $count_SQL;
-	public $from_SQL;
+
+    public $SQL;
+    public $count_SQL;
+    public $sum_SQL;
 
 	public $prev_name;
 	public $prev_table;
@@ -665,33 +666,32 @@ class Q_Query {
                 $SQL .= ' GROUP BY '.$db->make_ident($this->table, 'id');
             }
 
-			if ($this->order_by) {
-				$SQL .= ' ORDER BY '.implode(', ', $this->order_by);
-			} else {
-				$SQL .= ' ORDER BY '.$db->make_ident($this->table, 'id');
-			}
+            if ($this->order_by) {
+                $SQL .= ' ORDER BY '.implode(', ', $this->order_by);
+            }
+            else {
+                $SQL .= ' ORDER BY '.$db->make_ident($this->table, 'id');
+            }
 
 			if ($this->limit) {
 				$SQL .= ' LIMIT '.$this->limit;
 			}
 
             $schema = ORM_Model::schema($this->name);
-            //从schema中得到fields，优化查询
-            $fields = $schema['fields'] ? array_keys($schema['fields']) : ['id'];
 
-            //多个表join后，可能有相同名称的字段，所以需要make_ident加以区分
-            $fields = array_map(function($f) use($db){
-                    return $db->make_ident($this->table, $f);
-                    }, $fields);
-            $fields = join(',', $fields);
+            $fields = join(', ', array_map(function($f) {
+                return $this->db->make_ident($this->table, $f);
+            }, array_keys($schema['fields'])));
 
-            $this->from_SQL = $SQL;
-            $this->SQL = 'SELECT '.$fields.' FROM '.$SQL;
-			$this->count_SQL = 'SELECT COUNT(DISTINCT '.$db->make_ident($this->table, 'id').') count FROM ' . $count_SQL;
+            $this->SQL = 'SELECT '. $fields. 'FROM '. $SQL;
 
-		}
+            $this->count_SQL = 'SELECT COUNT(DISTINCT '. $db->make_ident($this->table, 'id'). ') FROM'. $count_SQL;
 
-	}
+            $field = $db->make_ident($this->table, '%FIELD%');
 
+            //设定sum_table， 防止子查询中table相同出现冲突问题
+            $sum_table = 'sum'. $this->table;
+            $this->sum_SQL = 'SELECT SUM('. $db->make_ident($sum_table, '%FIELD%'). ') FROM (SELECT '. $field. ' FROM '. $SQL. ') '. $db->make_ident($sum_table);
+        }
+    }
 }
-
