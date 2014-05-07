@@ -65,10 +65,10 @@ abstract class _Q extends ORM_Iterator {
 				$i = Q::quote($i);
 			}			
 			return implode(',', $s);
-		} 
+		}
 		elseif ( is_bool($s) || is_numeric($s) ) {
 			return $s;
-		} 
+		}
 		elseif ( is_null($s) ) {
 			return '';
 		}
@@ -90,24 +90,24 @@ abstract class _Q extends ORM_Iterator {
 
 			if (false === $cache_data) {
 				$query = $this->parse_selector();
-				$cache_data = array(
-					'name' => $query->name,
-					'SQL' => $query->SQL,
-					'count_SQL' => $query->count_SQL,
-					'sum_SQL' => 'SELECT SUM(`'.$query->table.'`.`%name`) FROM '.$query->from_SQL,
-				);
+                $cache_data = array(
+                    'name' => $query->name,
+                    'SQL' => $query->SQL,
+                    'count_SQL' => $query->count_SQL,
+                    'sum_SQL' => $query->sum_SQL,
+                );
 
 				if ($cache) $cache->set($cache_key, $cache_data);
-			}
+            }
 
-			$this->name = $cache_data['name'];
-			$this->SQL = $cache_data['SQL'];
-			$this->count_SQL = $cache_data['count_SQL'];
-			$this->sum_SQL = $cache_data['sum_SQL'];
+            $this->SQL = $cache_data['SQL'];
+            $this->count_SQL = $cache_data['count_SQL'];
+            $this->sum_SQL = $cache_data['sum_SQL'];
 
 			$this->_is_parsed = TRUE;
-		}
-	}	
+            $this->name = $cache_data['name'];
+        }
+	}
 
 	protected function check_query($scope='fetch') {
 		$this->parse();
@@ -141,7 +141,7 @@ abstract class _Q extends ORM_Iterator {
 
 		if ($Q) {
 			$Q->selector = Q::rewrite_selector($selector, $selector_objects);
-		} 
+		}
 		else {
 			$Q = new Q($selector, $this->db);
 		}
@@ -196,14 +196,14 @@ abstract class _Q extends ORM_Iterator {
 		return $this->objects[$id];
 	}
 
-
 	protected $sum_SQL;
-	function sum($name) {
-		$this->parse();
-		$SQL = strtr($this->sum_SQL, array('%name'=>$this->db->escape($name)));	
-		return $this->db->value($SQL);
-	}
+    function sum($field) {
+        $this->parse();
 
+        $sum_SQL = strtr($this->sum_SQL, array(
+            '%FIELD%'=> $field,
+        ));
+
+        return $this->db->value($sum_SQL);
+    }
 }
-
-
