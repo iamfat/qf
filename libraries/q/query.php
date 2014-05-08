@@ -661,6 +661,9 @@ class Q_Query {
 
             $count_SQL = $SQL;
 
+            //from_SQL在部分pseude里面使用
+            $this->from_SQL = $SQL;
+
             if ($this->join) {
                 //为了保证id的唯一
                 $SQL .= ' GROUP BY '.$db->make_ident($this->table, 'id');
