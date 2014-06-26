@@ -31,8 +31,7 @@ final class Database_MySQL implements Database_Handler {
 		);
 		
 		if ($this->_handle->connect_errno) {
-			error_log('database connect error');
-			die;
+            throw new Error_Exception('database connect error');
 		} 
 		else {
 			$this->_handle->set_charset('utf8');
