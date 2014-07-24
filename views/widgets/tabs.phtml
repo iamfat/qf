@@ -7,6 +7,8 @@
 			$links = array();
 			foreach ($tab['*'] as $t) {
 				$links[]= URI::anchor($t['url'], $t['title'], 'class="middle"');
+				if($t['width']) $tab['width'] = $t['width'];
+				if($t['wrapper_height']) $tab['wrapper_height'] = $t['wrapper_height'];
 			}
 			$content = implode(' <span class="separator middle">►</span> ', $links);
 		}
