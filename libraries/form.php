@@ -169,7 +169,7 @@ abstract class _Form extends ArrayIterator {
 	}
 	
 	protected function validate_is_token($key, $error, $params){
-		$p = preg_match('/^[A-z0-9][A-z0-9_.-@]+(\|\w+)?$/', $this[$key]);
+		$p = preg_match('/^[A-z0-9][A-z0-9_.\-@]+(\|\w+)?$/', $this[$key]);
 		if(!$p){
 			$this->no_error = FALSE;
 			$this->errors[$key][]= $error ?: T('不合法');
