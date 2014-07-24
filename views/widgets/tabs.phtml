@@ -7,6 +7,8 @@
 			$links = array();
 			foreach ($tab['*'] as $t) {
 				$links[]= URI::anchor($t['url'], $t['title'], 'class="middle"');
+				if($t['width']) $tab['width'] = $t['width'];
+				if($t['wrapper_height']) $tab['wrapper_height'] = $t['wrapper_height'];
 			}
 			$content = implode(' <span class="separator middle">►</span> ', $links);
 		}
@@ -14,7 +16,7 @@
 		<?php if(!isset($tab['*'])) { ?>
 			<a href="<?php echo $tab['url'] ?>" class="middle">
 		<?php } ?>
-			<span class="tab_wrapper"><span class="tab<?php echo $tab['active']?' active_tab':''?>">
+			<span class="tab_wrapper" <?php if($tab['wrapper_height']) echo 'style="height:'.$tab['wrapper_height'].'px;"';?>><span class="tab<?php echo $tab['active']?' active_tab':''?>" <?php if($tab['width']) echo 'title="'.H($tab['title']).'" style="width:'.$tab['width'].'px;overflow:hidden;text-overflow:ellipsis"'?>>
 				<?php if(!isset($tab['*'])) {echo $tab['title'];} else {echo $content;} ?>
 			</span><?php 
 				if($tab['number']): 
