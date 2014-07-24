@@ -14,7 +14,7 @@
 		<?php if(!isset($tab['*'])) { ?>
 			<a href="<?php echo $tab['url'] ?>" class="middle">
 		<?php } ?>
-			<span class="tab_wrapper"><span class="tab<?php echo $tab['active']?' active_tab':''?>">
+			<span class="tab_wrapper"><span class="tab<?php echo $tab['active']?' active_tab':''?>" <?php if($tab['q-tooltip']) echo 'q-tooltip="'.$tab['q-tooltip'].'"'?>>
 				<?php if(!isset($tab['*'])) {echo $tab['title'];} else {echo $content;} ?>
 			</span><?php 
 				if($tab['number']): 
