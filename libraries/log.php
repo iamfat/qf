@@ -20,8 +20,9 @@ abstract class _Log {
 
 		$mode = PHP_SAPI;
 		$uri = $_SERVER['REQUEST_URI'];
+        $pid = posix_getpid();
 		
-		@file_put_contents($log_path, "$time $mode $host$uri \t{$message}\n", FILE_APPEND);
+        @file_put_contents($log_path, "$time $mode $host$uri [$pid] \t{$message}\n", FILE_APPEND);
 	}
 	
 }
