@@ -142,7 +142,7 @@ abstract class _Date {
 			$k_valid = !$valid || FALSE !== strpos($valid, $k);
 			if ($k_valid) {
 				$last = array(floor($time/$v), $k);
-				if (($time % $v) == 0) {
+				if ($time && ($time % $v) == 0) {
 					break;
 				}
 			}
