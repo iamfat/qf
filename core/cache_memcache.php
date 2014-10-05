@@ -1,7 +1,7 @@
 <?php
 
-define('MEMCACHE_HOST', '127.0.0.1');
-define('MEMCACHE_PORT', 11211);
+if (!defined('MEMCACHE_HOST')) define('MEMCACHE_HOST', '127.0.0.1');
+if (!defined('MEMCACHE_PORT')) define('MEMCACHE_PORT', 11211);
 
 class Cache_Memcache implements Cache_Handler {
 
