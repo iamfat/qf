@@ -177,7 +177,7 @@ abstract class _Form extends ArrayIterator {
 	}
 	
 	protected function validate_not_empty($key, $error, $params){
-		if(empty($this[$key]) || !isset($this[$key]) || is_null($this[$key]) || trim($this[$key])==''){
+		if(!isset($this[$key]) || is_null($this[$key]) || trim($this[$key])==''){
 			$this->no_error = FALSE;
 			$this->errors[$key][]= $error ?: T('不能为空');
 		}
