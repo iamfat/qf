@@ -686,7 +686,7 @@ class Q_Query {
                 return $this->db->make_ident($this->table, $f);
             }, array_keys($schema['fields'])));
 
-            $this->SQL = 'SELECT '. $fields. 'FROM '. $SQL;
+            $this->SQL = 'SELECT '. $fields. ' FROM '. $SQL;
 
             $this->count_SQL = 'SELECT COUNT(DISTINCT '. $db->make_ident($this->table, 'id'). ') FROM'. $count_SQL;
 
