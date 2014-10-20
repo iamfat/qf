@@ -75,7 +75,7 @@ abstract class _URI {
 	
 	static function anchor($url, $text = NULL, $extra=NULL, $options=array()) {
 		if ($extra) $extra = ' '.$extra;
-		if (!$text) $text = $url;
+		if ($text === NULL) $text = $url;
 		$url = URI::url($url, $options['query'], $options['fragment']);
 		return '<a href="'.$url.'"'.$extra.'>'.$text.'</a>';
 	}
