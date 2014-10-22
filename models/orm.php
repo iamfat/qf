@@ -473,7 +473,6 @@ abstract class _ORM_Model {
 
 		$old_id = $id = $this->_data['id'];
 		$db = self::db($name);
-		$db->begin_transaction();
 
 		$success = TRUE;
 		foreach ($data as $rname => &$d) {
@@ -484,14 +483,12 @@ abstract class _ORM_Model {
 		}
 		
 		if ($success) {
-			$db->commit();
 			foreach ($data as $rname => &$d) {
 				$this->set_data($d + $this->_data);
 			}
 
 		}
 		else {
-			$db->rollback();
 			return FALSE;
 		}
 		
