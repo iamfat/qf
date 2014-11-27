@@ -378,7 +378,7 @@ final class Database_MySQL implements Database_Handler {
 				$table_str,
 				escapeshellarg($filename)
 				);	
-		exec($dump_command, $output=NULL, $ret);
+		exec($dump_command, $output, $ret);
 		return $ret == 0;
 	}
 	
@@ -399,7 +399,7 @@ final class Database_MySQL implements Database_Handler {
 				escapeshellarg($this->_info['db']),
 				escapeshellarg($filename)
 				);	
-		exec($import_command, $output=NULL, $ret);
+		exec($import_command, $output, $ret);
 		
 		return $ret == 0;
 	}
