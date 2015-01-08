@@ -96,12 +96,27 @@ abstract class _View {
 
 		$locale = Config::get('system.locale');
 		
-		$_path = Core::file_exists(VIEW_BASE.'@'.$locale.'/'.$path.VEXT, $category);
-		if (!$_path) {
-			$_path=Core::file_exists(VIEW_BASE.$path.VEXT, $category);
-		}
+        if (isset($GLOBALS['view_map']) && is_array($GLOBALS['view_map'])) {
+            $view_map = $GLOBALS['view_map'];
+            if ($category && isset($view_map["$category:$path@$locale"])) {
+                $_path = $view_map["$category:$path@$locale"];
+            } elseif ($category && isset($view_map["$category:$path"])) {
+                $_path = $view_map["$category:$path"]);
+            } elseif (isset($view_map["$path@$locale"])) {
+                $_path = $view_map["$path@$locale"]);
+            } elseif (isset($view_map[$path])) {
+                $_path = $view_map[$path]);
+            }
+        } else {
+    		$_path = Core::file_exists(VIEW_BASE.'@'.$locale.'/'.$path.VEXT, $category);
+    		if (!$_path) {
+    			$_path=Core::file_exists(VIEW_BASE.$path.VEXT, $category);
+    		}
+        }
 
-		$output = $this->_include_view($_path, $_vars);
+        if ($_path) {
+    		$output = $this->_include_view($_path, $_vars);
+        }
 
 		$event = $category ? "view[{$category}:{$path}].postrender ":'';
 		$event .= "view[{$path}].postrender view.postrender";

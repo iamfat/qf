@@ -230,8 +230,16 @@ final class Core {
 			$CLASS_PATTERN = "/^(_)?(\w+?)(?:({$SUFFIX1})?|({$SUFFIX2})?)$/i";
 		}
 
-
 		$class = strtolower($class);
+
+        if (isset($GLOBALS['class_map']) && is_array($GLOBALS['class_map'])) {
+            $class_map = $GLOBALS['class_map'];
+            if (isset($class_map[$class])) {
+                require_once($class_map[$class]);
+            }
+            return;
+        }
+
 		$nocache = FALSE;
 		if (preg_match($CLASS_PATTERN, $class, $parts)) {
 
