@@ -101,11 +101,11 @@ abstract class _View {
             if ($category && isset($view_map["$category:$path@$locale"])) {
                 $_path = $view_map["$category:$path@$locale"];
             } elseif ($category && isset($view_map["$category:$path"])) {
-                $_path = $view_map["$category:$path"]);
+                $_path = $view_map["$category:$path"];
             } elseif (isset($view_map["$path@$locale"])) {
-                $_path = $view_map["$path@$locale"]);
+                $_path = $view_map["$path@$locale"];
             } elseif (isset($view_map[$path])) {
-                $_path = $view_map[$path]);
+                $_path = $view_map[$path];
             }
         } else {
     		$_path = Core::file_exists(VIEW_BASE.'@'.$locale.'/'.$path.VEXT, $category);
