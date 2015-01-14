@@ -168,8 +168,6 @@ final class Core {
 
 		self::include_path('application', APP_PATH);
 
-		Config::setup();
-
 		Config::load(SYS_PATH);
 		Config::load(APP_PATH);
 
@@ -232,18 +230,20 @@ final class Core {
 
 		$class = strtolower($class);
 
-        if (isset($GLOBALS['class_map']) && is_array($GLOBALS['class_map'])) {
-            $class_map = $GLOBALS['class_map'];
-            if (isset($class_map[$class])) {
-                require_once($class_map[$class]);
-            }
-            return;
-        }
-
 		$nocache = FALSE;
+		
 		if (preg_match($CLASS_PATTERN, $class, $parts)) {
 
 			list(, $is_core, $name, $suffix1, $suffix2) = $parts;
+
+	        if ($suffix1 != CONTROLLER_SUFFIX && isset($GLOBALS['class_map']) && is_array($GLOBALS['class_map'])) {
+	            $class_map = $GLOBALS['class_map'];
+	            if (isset($class_map[$class])) {
+	                require_once($class_map[$class]);
+	            }
+
+	            return;
+	        }
 
 			if ($suffix1) {
 				$bases = $CLASS_BASES[$suffix1];
