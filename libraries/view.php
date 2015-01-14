@@ -98,12 +98,13 @@ abstract class _View {
 		
         if (isset($GLOBALS['view_map']) && is_array($GLOBALS['view_map'])) {
             $view_map = $GLOBALS['view_map'];
-            if ($category && isset($view_map["$category:$path@$locale"])) {
-                $_path = $view_map["$category:$path@$locale"];
+            $category = $category ?: MODULE_ID;
+            if ($category && isset($view_map["$category:@$locale/$path"])) {
+                $_path = $view_map["$category:@$locale/$path"];
             } elseif ($category && isset($view_map["$category:$path"])) {
                 $_path = $view_map["$category:$path"];
-            } elseif (isset($view_map["$path@$locale"])) {
-                $_path = $view_map["$path@$locale"];
+            } elseif (isset($view_map["@$locale/$path"])) {
+                $_path = $view_map["@$locale/$path"];
             } elseif (isset($view_map[$path])) {
                 $_path = $view_map[$path];
             }

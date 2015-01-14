@@ -4,7 +4,22 @@ abstract class _Config {
 
 	static $items = array();
 
-	static function setup(){}
+	static function setup(){
+        self::clear();
+        $config_file = LAB_PATH . 'config_map';
+        if (file_exists($config_file)) {
+            self::$items = $configs = @json_decode(file_get_contents($config_file), TRUE);
+            unset( self::$items['#CLI'] );
+            if ( defined('CLI_MODE') ) {
+            	self::$items = (array)$configs['#CLI'] + self::$items;
+            }
+        }
+        else {
+            foreach (array_reverse(Core::$PATHS) as $p => $n) {
+                self::load($p);
+            }
+        }
+	}
 
 	private static function _load($category, $filename) {
 		if (is_file($filename)) {
