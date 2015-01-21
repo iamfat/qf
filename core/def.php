@@ -32,15 +32,18 @@ define('EXT', '.php');
 define('VEXT', '.phtml');
 
 if (PHP_SAPI != 'cli') {
-	if (extension_loaded('yac')) {
-		define('DEFAULT_CACHE', 'yac');
-	}
-	elseif (extension_loaded('xcache') && ini_get('xcache.var_size')) {
-		define('DEFAULT_CACHE', 'xcache');
-	}
-	elseif (extension_loaded('apc')) {
-		define('DEFAULT_CACHE', 'apc');
-	}
+    if (extension_loaded('redis')) {
+        define('DEFAULT_CACHE', 'redis');
+    }
+    elseif (extension_loaded('yac')) {
+        define('DEFAULT_CACHE', 'yac');
+    }
+    elseif (extension_loaded('xcache') && ini_get('xcache.var_size')) {
+        define('DEFAULT_CACHE', 'xcache');
+    }
+    elseif (extension_loaded('apc')) {
+        define('DEFAULT_CACHE', 'apc');
+    }
 }
 
 if (!defined('DEFAULT_CACHE')) {
