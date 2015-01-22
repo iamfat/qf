@@ -16,11 +16,11 @@ class Cache_Redis implements Cache_Handler {
     }
 
     function set($key, $value, $ttl) {
-        return $this->redis->set($key, serialize($value), $ttl);
+        return $this->redis->set($key, @json_encode($value, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES), $ttl);
     }
 
     function get($key) {
-        return unserialize($this->redis->get($key));
+        return @json_decode($this->redis->get($key), true);
     }
 
     function remove($key) {
