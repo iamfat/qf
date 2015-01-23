@@ -20,7 +20,14 @@ class Cache_Redis implements Cache_Handler {
     }
 
     function get($key) {
-        return @json_decode($this->redis->get($key), true);
+
+        $data = $this->redis->get($key);
+
+        if ($data !== FALSE) {
+            return @json_decode($data, true);
+        }
+
+        return FALSE;
     }
 
     function remove($key) {
