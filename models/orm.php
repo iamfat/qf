@@ -507,8 +507,15 @@ abstract class _ORM_Model {
 			return FALSE;
 		}
 
+        Cache::factory()->remove($this->_cache_name());
+
 		return TRUE;
 	}
+
+    function cache_name() {
+        return $this->name(). '#'. $this->id;
+    }
+
 	
 	function delete() {
 	
@@ -529,6 +536,8 @@ abstract class _ORM_Model {
 				return FALSE;
 
 		}
+
+        Cache::factory()->remove($this->_cache_name());
 		
 		return TRUE;
 	}
@@ -865,31 +874,48 @@ abstract class _ORM_Model {
 					$criteria = array('id'=>$criteria);
 				}
 
-				$db = self::db($real_name);
-		
-				$object->encode_objects($criteria);
+                //如果传递了 id
+                //尝试 cache 获取 $data
 
-				//从数据库中获取该数据
-				foreach ($criteria as $k=>$v) {
-					$where[] = $db->quote_ident($k) . '=' . $db->quote($v);
-				}
+                if ($criteria['id']) {
+                    $cache_data = Cache::factory()->get($object->_cache_name());
 
-                $schema = self::schema($name);
-                //从schema中得到fields，优化查询
-                $fields = $schema['fields'] ? $db->quote_ident(array_keys($schema['fields'])) : $db->quote_ident('id');
+                    if ($cache_data) {
+                        $data = $cache_data;
+                    }
+                }
 
-                // SELECT * from a JOIN b, c ON b.id=a.id AND c.id = b.id AND b.attr_b='xxx' WHERE a.attr_a = 'xxx';
-                $SQL = 'SELECT '.$fields.' FROM '.$db->quote_ident($real_name).' WHERE '.implode(' AND ', $where).' LIMIT 1';
-				
-				$result = $db->query($SQL);
-				//只取第一条记录
-				if ($result) {
-					$data = (array) $result->row('assoc');
-				}
-				else {
-					$data = array();
-				}
-					
+                if (!$data) {
+
+                    $db = self::db($real_name);
+
+                    $object->encode_objects($criteria);
+
+                    //从数据库中获取该数据
+                    foreach ($criteria as $k=>$v) {
+                        $where[] = $db->quote_ident($k) . '=' . $db->quote($v);
+                    }
+
+                    $schema = self::schema($name);
+                    //从schema中得到fields，优化查询
+                    $fields = $schema['fields'] ? $db->quote_ident(array_keys($schema['fields'])) : $db->quote_ident('id');
+
+                    // SELECT * from a JOIN b, c ON b.id=a.id AND c.id = b.id AND b.attr_b='xxx' WHERE a.attr_a = 'xxx';
+                    $SQL = 'SELECT '.$fields.' FROM '.$db->quote_ident($real_name).' WHERE '.implode(' AND ', $where).' LIMIT 1';
+
+                    $result = $db->query($SQL);
+                    //只取第一条记录
+                    if ($result) {
+                        $data = (array) $result->row('assoc');
+                    }
+                    else {
+                        $data = array();
+                    }
+
+                    if ($data['id']) {
+                        Cache::factory()->set($object->_cache_name(), $data);
+                    }
+                }
 			}
 
 			$delete_me = FALSE;

@@ -18,13 +18,19 @@ abstract class _Properties {
 		$name = $object->name();
 		$id = $object->id;
 		
-		$db = ORM_Model::db($name);
+        $data = Cache::factory()->get($this->object_cache_name());
 
-		//$data = @unserialize(@base64_decode($code)?:$code);
-		// TO BE REMOVED: 这两种形式 哪种兼容性更好一些? Jia Huang @ 2010.12.19
-		//
+        if (!$data) {
+            $db = ORM_Model::db($name);
 
-        $this->_items = @json_decode($db->value('SELECT `_extra` FROM `%s` WHERE `id`=%d', $name, $id), TRUE);
+            //$data = @unserialize(@base64_decode($code)?:$code);
+            // TO BE REMOVED: 这两种形式 哪种兼容性更好一些? Jia Huang @ 2010.12.19
+            //
+
+            $data = @json_decode($db->value('SELECT `_extra` FROM `%s` WHERE `id`=%d', $name, $id), TRUE);
+        }
+
+        $this->_items = $data;
 	}
 	
 	function & __get($name) {
@@ -68,10 +74,12 @@ abstract class _Properties {
 
         $db->query('UPDATE `%s` SET `_extra` = NULL WHERE `id` = %d', $name, $id);
 
+        Cache::factory()->remove($this->object_cache_name());
+
 		return $this;
 	}
 	
-	function save(){
+	function save() {
 		if($this->_updated){
 			$name = $this->_object->name();
 
@@ -85,6 +93,9 @@ abstract class _Properties {
 			$this->_updated = FALSE;
 			
 		}
+
+        Cache::factory()->remove($this->object_cache_name());
+
 		return $this;
 	}
 	
@@ -108,6 +119,9 @@ abstract class _Properties {
 		return $this->_object;
 	}
 
+    function object_cache_name() {
+        return $this->_object->cache_name(). '_properties';
+    }
 }
 
 function P($object) {
