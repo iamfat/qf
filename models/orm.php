@@ -167,6 +167,7 @@ abstract class _ORM_Model {
 	}
 	
 	function get($name, $original=FALSE) {
+
 		if (!$original && array_key_exists($name, $this->_update)) return $this->_update[$name];
 	
 		if (isset($this->_objects[$name])) return $this->_objects[$name];
@@ -211,10 +212,10 @@ abstract class _ORM_Model {
 
 		}
 
-		if ($this->_data['id']) {
-			$val = Properties::factory($this)->get($name);
-			if ($val !== NULL) return $val;
-		}
+        if ($this->_data['id']) {
+            $val = Properties::factory($this)->get($name);
+            if ($val !== NULL) return $val;
+        }
 
 		$val = $this->trigger_event('get', $name);
 		if ($val !== NULL) return $val;
@@ -223,7 +224,6 @@ abstract class _ORM_Model {
 			$val = $this->default_value($name);
 			if ($val !== NULL) return $val;
 		}
-
 	}
 	
 	function set($name, $value = NULL){
@@ -410,7 +410,7 @@ abstract class _ORM_Model {
 		return TRUE;
 	}
 	
-	function save($overwrite = FALSE){
+	function save($overwrite = FALSE) {
 
 		//如果update为空直接返回
 		if(!$this->_update) return TRUE;
@@ -475,6 +475,7 @@ abstract class _ORM_Model {
 		$db = self::db($name);
 
 		$success = TRUE;
+
 		foreach ($data as $rname => &$d) {
 			if ($id) $d['id'] = $id;
 			$success = $this->_save_data($db, $rname, $d, $overwrite);
@@ -498,6 +499,7 @@ abstract class _ORM_Model {
 		}
 
 		$this->_update = array();
+
 		$this->release_objects();
 
         //success后，需要同步更新properties数据
@@ -507,8 +509,16 @@ abstract class _ORM_Model {
 			return FALSE;
 		}
 
+        Cache::factory()->remove($this->cache_name($this->id));
+
 		return TRUE;
 	}
+
+    //由于部分情况下, $this 是无 $id 的, 故考虑使用 $id 数据传入
+    function cache_name($id = NULL) {
+        return $this->name(). '#'. $id ? : $this->id;
+    }
+
 	
 	function delete() {
 	
@@ -529,6 +539,8 @@ abstract class _ORM_Model {
 				return FALSE;
 
 		}
+
+        Cache::factory()->remove($this->cache_name());
 		
 		return TRUE;
 	}
@@ -865,31 +877,49 @@ abstract class _ORM_Model {
 					$criteria = array('id'=>$criteria);
 				}
 
-				$db = self::db($real_name);
-		
-				$object->encode_objects($criteria);
+                //如果传递了 id
+                //尝试 cache 获取 $data
 
-				//从数据库中获取该数据
-				foreach ($criteria as $k=>$v) {
-					$where[] = $db->quote_ident($k) . '=' . $db->quote($v);
-				}
+                if ($criteria['id']) {
 
-                $schema = self::schema($name);
-                //从schema中得到fields，优化查询
-                $fields = $schema['fields'] ? $db->quote_ident(array_keys($schema['fields'])) : $db->quote_ident('id');
+                    $cache_data = Cache::factory()->get($object->cache_name($criteria['id']));
 
-                // SELECT * from a JOIN b, c ON b.id=a.id AND c.id = b.id AND b.attr_b='xxx' WHERE a.attr_a = 'xxx';
-                $SQL = 'SELECT '.$fields.' FROM '.$db->quote_ident($real_name).' WHERE '.implode(' AND ', $where).' LIMIT 1';
-				
-				$result = $db->query($SQL);
-				//只取第一条记录
-				if ($result) {
-					$data = (array) $result->row('assoc');
-				}
-				else {
-					$data = array();
-				}
-					
+                    if ($cache_data !== FALSE) {
+                        $data = $cache_data;
+                    }
+                }
+
+                if (!$data) {
+
+                    $db = self::db($real_name);
+
+                    $object->encode_objects($criteria);
+
+                    //从数据库中获取该数据
+                    foreach ($criteria as $k=>$v) {
+                        $where[] = $db->quote_ident($k) . '=' . $db->quote($v);
+                    }
+
+                    $schema = self::schema($name);
+                    //从schema中得到fields，优化查询
+                    $fields = $schema['fields'] ? $db->quote_ident(array_keys($schema['fields'])) : $db->quote_ident('id');
+
+                    // SELECT * from a JOIN b, c ON b.id=a.id AND c.id = b.id AND b.attr_b='xxx' WHERE a.attr_a = 'xxx';
+                    $SQL = 'SELECT '.$fields.' FROM '.$db->quote_ident($real_name).' WHERE '.implode(' AND ', $where).' LIMIT 1';
+
+                    $result = $db->query($SQL);
+                    //只取第一条记录
+                    if ($result) {
+                        $data = (array) $result->row('assoc');
+                    }
+                    else {
+                        $data = array();
+                    }
+
+                    if ($data['id']) {
+                        Cache::factory()->set($object->cache_name($data['id']), $data);
+                    }
+                }
 			}
 
 			$delete_me = FALSE;
