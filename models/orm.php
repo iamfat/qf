@@ -508,8 +508,11 @@ abstract class _ORM_Model {
 		if (FALSE === $this->trigger_event('saved', $old_data, $new_data)) {
 			return FALSE;
 		}
-
-        Cache::factory()->remove($this->cache_name($this->id));
+        
+        if (!in_array($this->name(), Config::get('nocache.models', []))) {
+            Cache::factory()->remove($this->cache_name($this->id));
+        }
+        
 
 		return TRUE;
 	}
@@ -539,8 +542,9 @@ abstract class _ORM_Model {
 				return FALSE;
 
 		}
-
-        Cache::factory()->remove($this->cache_name());
+        if (!in_array($this->name(), Config::get('nocache.models', []))) {
+            Cache::factory()->remove($this->cache_name());
+        }
 		
 		return TRUE;
 	}
@@ -880,7 +884,7 @@ abstract class _ORM_Model {
                 //如果传递了 id
                 //尝试 cache 获取 $data
 
-                if ($criteria['id']) {
+                if ($criteria['id'] && !in_array($object->name(), Config::get('nocache.models', []))) {
 
                     $cache_data = Cache::factory()->get($object->cache_name($criteria['id']));
 
@@ -916,7 +920,7 @@ abstract class _ORM_Model {
                         $data = array();
                     }
 
-                    if ($data['id']) {
+                    if ($data['id'] && !in_array($object->name(), Config::get('nocache.models', []))) {
                         Cache::factory()->set($object->cache_name($data['id']), $data);
                     }
                 }
