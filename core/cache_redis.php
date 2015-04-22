@@ -2,6 +2,7 @@
 
 if (!defined('REDIS_HOST')) define('REDIS_HOST', '127.0.0.1');
 if (!defined('REDIS_PORT')) define('REDIS_PORT', 6379);
+if (!defined('REDIS_DB'))   define('REDIS_DB', 0);
 
 class Cache_Redis implements Cache_Handler {
 
@@ -11,6 +12,7 @@ class Cache_Redis implements Cache_Handler {
 
         $redis = new Redis;
         $redis->connect(REDIS_HOST, REDIS_PORT);
+        $redis->select(REDIS_DB);
         $this->redis = $redis;
 
     }
@@ -35,6 +37,6 @@ class Cache_Redis implements Cache_Handler {
     }
 
     function flush() {
-        return $this->redis->flush();
+        return $this->redis->flushDB();
     }
 }
