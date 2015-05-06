@@ -190,7 +190,7 @@ final class Database_MySQL implements Database_Handler {
 				$missing_indexes = array_diff_key($indexes, $curr_indexes);
 				foreach($missing_indexes as $key=>$val) {
 					$field_sql[] = sprintf('ADD %s '
-						, $this->alter_index_sql($key, $val));
+						, $this->alter_index_sql($key, $val, FALSE));
 				}
 				
 				foreach($curr_indexes as $key=>$curr_val) {
@@ -199,8 +199,8 @@ final class Database_MySQL implements Database_Handler {
 						if ( $val['type'] != $curr_val['type']
 							|| array_diff($val, $curr_val)) {
 							$field_sql[]=sprintf('DROP %s, ADD %s'
-								, $this->alter_index_sql($key, $curr_val, TRUE)
-								, $this->alter_index_sql($key, $val));
+								, $this->alter_index_sql($key, $curr_val, TRUE, TRUE)
+								, $this->alter_index_sql($key, $val, FALSE));
 						}
 					}
 					else/*if ($remove_nonexistent)*/ {
@@ -286,13 +286,13 @@ final class Database_MySQL implements Database_Handler {
 		}
 	}
 	
-	private function alter_index_sql($key, &$val, $no_fields = FALSE) {
+	private function alter_index_sql($key, &$val, $drop, $no_fields = FALSE) {
 		switch($val['type']){
 		case 'primary':
 			$type='PRIMARY ';
 			break;
 		case 'unique':
-			$type='UNIQUE '. $this->quote_ident($key);
+			$type=($drop ? 'INDEX' : 'UNIQUE'). $this->quote_ident($key);
 			break;
 		default:
 			$type='INDEX '. $this->quote_ident($key);
