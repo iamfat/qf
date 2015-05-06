@@ -286,19 +286,19 @@ final class Database_MySQL implements Database_Handler {
 		}
 	}
 	
-	private function alter_index_sql($key, &$val, $no_fields = FALSE) {
+	private function alter_index_sql($key, &$val, $drop = FALSE) {
 		switch($val['type']){
 		case 'primary':
 			$type='PRIMARY ';
 			break;
 		case 'unique':
-			$type='UNIQUE '. $this->quote_ident($key);
+			$type=($drop ? 'INDEX' : 'UNIQUE'). $this->quote_ident($key);
 			break;
 		default:
 			$type='INDEX '. $this->quote_ident($key);
 		}
 		
-		if ($no_fields) {
+		if ($drop) {
 			return $type;
 		}
 		else {
