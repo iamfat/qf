@@ -452,7 +452,7 @@ abstract class _ORM_Model {
 			elseif (isset($json_keys[$k])) {
 				$kname = $k . self::JSON_SUFFIX;
 				$rname = $field_to_real_name[$kname];
-				$data[$rname][$kname] = @json_encode($v);
+				$data[$rname][$kname] = @json_encode($v, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
 			}
 			elseif (isset($field_to_real_name[$k])) {
 				$rname = $field_to_real_name[$k];
