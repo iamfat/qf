@@ -867,7 +867,11 @@ abstract class _ORM_Model {
 		
 		$object->name($name);
 
-		if ($criteria) {
+        if (method_exists($object, 'fetch')) {
+            $data = call_user_func([$object, 'fetch'], $criteria, $no_fetch);
+            $object->set_data($data);
+        }
+        else if ($criteria) {
 
 			$real_name = self::real_name($name);
 			$real_names = array_diff(self::real_names($name), array($real_name));
