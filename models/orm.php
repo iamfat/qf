@@ -855,7 +855,7 @@ abstract class _ORM_Model {
 		return $this->_name.'#'.$this->id;
     }
 
-    function fetch($criteria=null, $no_fetch=false) {
+    function fetch_data($criteria=null, $no_fetch=false) {
         if (!$criteria) return;
 
         $name = $this->name();
@@ -970,7 +970,7 @@ abstract class _ORM_Model {
 		
         $object->name($name);
 
-        $object->fetch($criteria, $no_fetch);
+        $object->fetch_data($criteria, $no_fetch);
 
 		//Object初始化
 		$object->init();
