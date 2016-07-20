@@ -52,8 +52,8 @@ abstract class _Auth_Database implements Auth_Handler {
 	}
 	
 	function change_password($token, $password){
-		$db = Database::factory($this->db_name);
-		return FALSE != $db->query('UPDATE `%s` SET `password`="%s" WHERE `token`="%s"', $this->table, self::encode($password), $token);
+        $db = Database::factory($this->db_name);
+        return FALSE != $db->query('REPLACE INTO `%s` (`token`, `password`) VALUES("%s", "%s")', $this->table, $token, self::encode($password));
 	}
 	
 	function change_token($token, $token_new){
