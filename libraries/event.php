@@ -61,7 +61,6 @@ abstract class _Event {
 		if (isset($hook)) {	
 			if (FALSE === call_user_func_array($hook['callback'], $args)) {
 				$this->stop_propagation = TRUE;
-				break;
 			}
 		}
 
