@@ -452,7 +452,7 @@ abstract class _ORM_Model {
 			elseif (isset($json_keys[$k])) {
 				$kname = $k . self::JSON_SUFFIX;
 				$rname = $field_to_real_name[$kname];
-				$data[$rname][$kname] = @json_encode($v);
+				$data[$rname][$kname] = @json_encode($v, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
 			}
 			elseif (isset($field_to_real_name[$k])) {
 				$rname = $field_to_real_name[$k];
@@ -853,7 +853,110 @@ abstract class _ORM_Model {
 
 	function __toString() {
 		return $this->_name.'#'.$this->id;
-	}
+    }
+
+    function fetch_data($criteria=null, $no_fetch=false) {
+        if (!$criteria) return;
+
+        $name = $this->name();
+        $real_name = self::real_name($name);
+        $real_names = array_diff(self::real_names($name), array($real_name));
+
+        if ($no_fetch) {
+            $data = (array) $criteria;
+        }
+        else {
+
+            if (is_scalar($criteria)) {
+                $criteria = array('id'=>$criteria);
+            }
+
+            //如果传递了 id
+            //尝试 cache 获取 $data
+
+            if ($criteria['id'] && !in_array($this->name(), Config::get('nocache.models', []))) {
+
+                $cache_data = Cache::factory()->get($this->cache_name($criteria['id']));
+
+                if ($cache_data !== FALSE) {
+                    $data = $cache_data;
+                }
+            }
+
+            if (!$data) {
+
+                $db = self::db($real_name);
+
+                $this->encode_objects($criteria);
+
+                //从数据库中获取该数据
+                foreach ($criteria as $k=>$v) {
+                    $where[] = $db->quote_ident($k) . '=' . $db->quote($v);
+                }
+
+                $schema = self::schema($name);
+                //从schema中得到fields，优化查询
+                $fields = $schema['fields'] ? $db->quote_ident(array_keys($schema['fields'])) : $db->quote_ident('id');
+
+                // SELECT * from a JOIN b, c ON b.id=a.id AND c.id = b.id AND b.attr_b='xxx' WHERE a.attr_a = 'xxx';
+                $SQL = 'SELECT '.$fields.' FROM '.$db->quote_ident($real_name).' WHERE '.implode(' AND ', $where).' LIMIT 1';
+
+                $result = $db->query($SQL);
+                //只取第一条记录
+                if ($result) {
+                    $data = (array) $result->row('assoc');
+                }
+                else {
+                    $data = array();
+                }
+
+                if ($data['id'] && !in_array($this->name(), Config::get('nocache.models', []))) {
+                    Cache::factory()->set($this->cache_name($data['id']), $data);
+                }
+            }
+        }
+
+        $delete_me = FALSE;
+
+        if ($data['id']) {
+            $id = $data['id'];
+        }
+        
+        if ($id && count($real_names) > 0) {
+
+            foreach ($real_names as $rname) {
+                
+                $db = self::db($rname);
+                $result = $db->query('SELECT * FROM `%s` WHERE `id`=%d', $rname, $id);
+                $d = $result ? $result->row('assoc') : NULL;
+                if ($d !== NULL) {
+                    $data += $d;
+                }
+                else {
+                    // 父类数据不存在
+                    $delete_me = TRUE;
+                    $delete_me_until = $rname;	//删除到该父类
+                    break;
+                }
+            }
+            
+            if ($delete_me) {
+                // 如果父类数据不存在 删除相关数据
+                foreach ($real_names as $rname) {
+                    if ($delete_me_until == $rname) break;
+                    $db = self::db($rname);
+                    $db->query('DELETE FROM `%s` WHERE `id`=%d', $rname, $id);
+                }
+                
+                $data = array();
+            }
+
+        }
+
+        //给object赋值
+        $this->set_data($data);
+
+    }
 	
 	static function factory($name, $criteria=NULL, $no_fetch=FALSE) {
 
@@ -865,109 +968,10 @@ abstract class _ORM_Model {
 			$object = new ORM_Model;
 		}
 		
-		$object->name($name);
+        $object->name($name);
 
-		if ($criteria) {
+        $object->fetch_data($criteria, $no_fetch);
 
-			$real_name = self::real_name($name);
-			$real_names = array_diff(self::real_names($name), array($real_name));
-
-			if ($no_fetch) {
-				$data = (array) $criteria;
-			}
-			else {
-
-				if (is_scalar($criteria)) {
-					$criteria = array('id'=>$criteria);
-				}
-
-                //如果传递了 id
-                //尝试 cache 获取 $data
-
-                if ($criteria['id'] && !in_array($object->name(), Config::get('nocache.models', []))) {
-
-                    $cache_data = Cache::factory()->get($object->cache_name($criteria['id']));
-
-                    if ($cache_data !== FALSE) {
-                        $data = $cache_data;
-                    }
-                }
-
-                if (!$data) {
-
-                    $db = self::db($real_name);
-
-                    $object->encode_objects($criteria);
-
-                    //从数据库中获取该数据
-                    foreach ($criteria as $k=>$v) {
-                        $where[] = $db->quote_ident($k) . '=' . $db->quote($v);
-                    }
-
-                    $schema = self::schema($name);
-                    //从schema中得到fields，优化查询
-                    $fields = $schema['fields'] ? $db->quote_ident(array_keys($schema['fields'])) : $db->quote_ident('id');
-
-                    // SELECT * from a JOIN b, c ON b.id=a.id AND c.id = b.id AND b.attr_b='xxx' WHERE a.attr_a = 'xxx';
-                    $SQL = 'SELECT '.$fields.' FROM '.$db->quote_ident($real_name).' WHERE '.implode(' AND ', $where).' LIMIT 1';
-
-                    $result = $db->query($SQL);
-                    //只取第一条记录
-                    if ($result) {
-                        $data = (array) $result->row('assoc');
-                    }
-                    else {
-                        $data = array();
-                    }
-
-                    if ($data['id'] && !in_array($object->name(), Config::get('nocache.models', []))) {
-                        Cache::factory()->set($object->cache_name($data['id']), $data);
-                    }
-                }
-			}
-
-			$delete_me = FALSE;
-
-			if ($data['id']) {
-				$id = $data['id'];
-			}
-			
-			if ($id && count($real_names) > 0) {
-
-				foreach ($real_names as $rname) {
-					
-					$db = self::db($rname);
-					$result = $db->query('SELECT * FROM `%s` WHERE `id`=%d', $rname, $id);
-					$d = $result ? $result->row('assoc') : NULL;
-					if ($d !== NULL) {
-						$data += $d;
-					}
-					else {
-						// 父类数据不存在
-						$delete_me = TRUE;
-						$delete_me_until = $rname;	//删除到该父类
-						break;
-					}
-				}
-				
-				if ($delete_me) {
-					// 如果父类数据不存在 删除相关数据
-					foreach ($real_names as $rname) {
-						if ($delete_me_until == $rname) break;
-						$db = self::db($rname);
-						$db->query('DELETE FROM `%s` WHERE `id`=%d', $rname, $id);
-					}
-					
-					$data = array();
-				}
-	
-			}
-
-			//给object赋值
-			$object->set_data($data);
-
-		}
-		
 		//Object初始化
 		$object->init();
 		
