@@ -7,6 +7,7 @@ interface Database_Handler {
 	function quote($s);
 	function quote_ident($s);
 	function query($SQL);
+	function exec($SQL);
 	function insert_id();
 	function affected_rows();
 	function table_exists($tbl);
@@ -184,6 +185,10 @@ final class Database {
 		$this->timeout = time() + self::TIMEOUT_VAL;
 
 		return $this->_handle->query($SQL);
+	}
+
+	function exec($SQL) {
+		return $this->_handle->exec($SQL);
 	}
 
 	function insert_id() {

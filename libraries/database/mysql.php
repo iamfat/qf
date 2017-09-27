@@ -103,6 +103,21 @@ final class Database_MySQL implements Database_Handler {
 		return $result;
 	}
 
+	function exec($SQL) {
+		$retried = 0;
+		while (TRUE) {
+			$result = @$this->_handle->multi_query($SQL);
+			if ($result) return;
+			if ($this->_handle->errno != 2006) break;
+			if ($retried > 0) {
+				error_log('database gone away!');
+				die;
+			}
+			$this->connect();
+			$retried ++;
+		}
+	}
+
 	function insert_id() {
 		return @$this->_handle->insert_id;
 	}
