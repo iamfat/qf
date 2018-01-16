@@ -415,7 +415,7 @@ abstract class _ORM_Model {
 		//如果update为空直接返回
 		if(!$this->_update) return TRUE;
 
-		if (FALSE === $this->trigger_event('before_save', $this->_update))
+		if (FALSE === $this->trigger_event('before_save', $this->_update, $this->_data))
 			return FALSE;
 
 		$name = $this->name();
