@@ -37,7 +37,9 @@ abstract class _Session {
 		
 		if ($_POST['qsession']) {
 			session_id($_POST['qsession']);
-		}
+        } elseif (isset($_SERVER['HTTP_X_GINI_SESSION'])) {
+            session_id($_SERVER['HTTP_X_GINI_SESSION']);
+        }
 		
 		session_start();
 		
