@@ -26,7 +26,7 @@ class Q_Query {
 	public $join;
 	public $where;
 	public $limit;
-	public $order_by;
+	public $order_by = array();
 
 	public $join_criteria = array();
 	public $join_tables = array();
@@ -39,7 +39,7 @@ class Q_Query {
 	private $prev_or_query;
 	private $prev_and_query;
 
-	private static $storable = array('prev_name', 'prev_table', 'where', 'rels', 'join_tables', 'join_criteria', 'alias', 'table_name');
+	private static $storable = array('prev_name', 'prev_table', 'where', 'rels', 'join_tables', 'join_criteria', 'table_name');
 
 	function fields($name) {
 		return ORM_Model::fields($name);

@@ -4,7 +4,7 @@ class Q_Pseudo_Sort implements Q_Pseudo {
 
 	static $guid = 0;
 	
-	const SORT_PATTERN = '/([\w\pL._-]+)\s*(DESC|ASC|↓|D|A|↑)?(\s*,\s*)?/';
+	const SORT_PATTERN = '/([\w\pL\._-]+)\s*(DESC|ASC|↓|D|A|↑)?(\s*,\s*)?/';
 
 	private $_query;
 
@@ -23,7 +23,7 @@ class Q_Pseudo_Sort implements Q_Pseudo {
 				$table = count($field_arr) ? $query->alias[array_pop($field_arr)] : $query->table;
 				$order = $part[2];
 				$order=preg_match('/^↓|D|DESC$/', $order) ? 'DESC':'ASC';
-				$query->order_by[] = $db->make_ident($table, $field).' '.$order;
+				$query->order_by += [$db->make_ident($table, $field).' '.$order];
 			}
 		}
 	}
