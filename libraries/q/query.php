@@ -672,9 +672,6 @@ class Q_Query {
             if ($this->order_by) {
                 $SQL .= ' ORDER BY '.implode(', ', $this->order_by);
             }
-            else {
-                $SQL .= ' ORDER BY '.$db->make_ident($this->table, 'id');
-            }
 
 			if ($this->limit) {
 				$SQL .= ' LIMIT '.$this->limit;
