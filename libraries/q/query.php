@@ -12,7 +12,7 @@ class Q_Query {
 
 	private $stack = array();
 
-	public $db;	
+	public $db;
 	public $name;
 	public $table;
 
@@ -114,7 +114,7 @@ class Q_Query {
 	public function pack_where($where, $op = 'AND') {
 		if (!is_array($where)) $where = array($where);
 		if (count($where) <= 1) return $where[0];
-		return '('.implode( ' '.$op.' ', $where).')'; 
+		return '('.implode( ' '.$op.' ', $where).')';
 	}
 
 	public function parse_id($part) {
@@ -153,7 +153,7 @@ class Q_Query {
 					return $this->db->make_ident($table, $field);
 				}
 			}
-		}		
+		}
 		return $this->db->quote($value);
 	}
 
@@ -264,7 +264,7 @@ class Q_Query {
 					}
 				}
 				if (count($sub_where)>0) $where[] = $this->pack_where($sub_where, 'OR');
-			} 
+			}
 		}
 
 		if (count($where)>0) $this->where[] = $this->pack_where($where, 'OR');
@@ -322,7 +322,7 @@ class Q_Query {
 					$join_criteria[] = $db->make_ident($this->table, $prev_oname).'='.$db->quote($this->prev_name);
 				}
 				$join_criteria[] = $db->make_ident($this->table, $prev_oid) .'='. $db->make_ident($this->prev_table, 'id');
-			} 
+			}
 			elseif ($name && isset($prev_fields[$oid])) {
 				//n:1 上一个表中包含与当前表同名的字段
 				$oname = $name.self::OBJ_NAME_SUFFIX;
@@ -330,7 +330,7 @@ class Q_Query {
 					$join_criteria[] = $db->make_ident($this->prev_table, $oname) . '=' . $db->quote($this->name);
 				}
 				$join_criteria[] = $db->make_ident($this->prev_table, $oid) . '=' . $db->make_ident($this->table, 'id');
-			} 
+			}
 			elseif (!$name && $prev_name) {
 				$name = $this->counterpart($prev_name);
 				$oid = $name.self::OBJ_ID_SUFFIX;
@@ -393,7 +393,7 @@ class Q_Query {
 
 		if (count($rels) == 0) {
 			//匿名关系 a b 		a.b_id = b or b.a_id = a
-			$rels[] = array($this->name, $this->prev_name, FALSE);		
+			$rels[] = array($this->name, $this->prev_name, FALSE);
 		}
 
 		$join_tables = array();
@@ -415,7 +415,7 @@ class Q_Query {
 			$rel_id1 = $db->make_ident($this->prev_table, 'id');
 			$rel_id2 = $db->make_ident($this->table, 'id');
 			$nn_flip = TRUE;
-		} 	
+		}
 
 		$nn_table = 'r'.(self::$_table_guid ++);
 
@@ -557,7 +557,7 @@ class Q_Query {
 				)+
 			\)
 			|\[
-				(?:\\\]|[^\]])+	
+				(?:\\\]|[^\]])+
 			\]
 			|[^ ,(\[|]+
 		)+
@@ -565,7 +565,7 @@ class Q_Query {
 
 	const PATTERN_NAME = '/^(\w+)(.*)?/u';
 
-	//新建对象正则模式  
+	//新建对象正则模式
 	//new object
 	const PATTERN_EMPTY = '/^\s*(\w+):empty\s*$/';
 	const ESCAPE_CHARS = '[]|,"\'';
@@ -576,13 +576,13 @@ class Q_Query {
 	}
 
 	function parse_selector($selector) {
-		
+
 		$offset = 0;
 		while (0 < preg_match(self::PATTERN_UNIT, $selector, $part, PREG_OFFSET_CAPTURE, $offset)) {
 			$unit = $part[1][0];
 			$offset = $part[0][1] + strlen($part[0][0]);
 			$sep = $part[2][0];
-			
+
 			//检查是否有子选择
 			if ($unit[0] == '(') {
 				$this->store();
@@ -633,7 +633,7 @@ class Q_Query {
 					$this->sep = $sep;
 				}
 				$this->store_unit();
-				$this->restore(FALSE);			
+				$this->restore(FALSE);
 			}
 
 		}
@@ -671,6 +671,9 @@ class Q_Query {
 
             if ($this->order_by) {
                 $SQL .= ' ORDER BY '.implode(', ', $this->order_by);
+            }
+            else {
+                $SQL .= ' ORDER BY '.$db->make_ident($this->table, 'id');
             }
 
 			if ($this->limit) {
