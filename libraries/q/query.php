@@ -423,6 +423,7 @@ class Q_Query {
 		$has_rel = FALSE;
 
 		$and_rels = array();
+        $or_rels = array();
 		foreach ($rels as $part) {
 
 			list($name, $prev_name, $or_op) = $part;
@@ -602,13 +603,13 @@ class Q_Query {
 				if (!$this->alias[$this->name]) $this->alias[$this->name] = $this->table;
 				$this->table_name[$this->table] = $this->name;
 
-				if (count($this->prev_and_query) > 0) {
+				if (is_array($this->prev_and_query) && count($this->prev_and_query) > 0) {
 					while ($this->restore(TRUE, $this->prev_and_query)) {
 						$this->parse_rest($rest);
 						$this->finalize_join();
 					}
 				}
-				elseif (count($this->prev_or_query) > 0) {
+				elseif (is_array($this->prev_or_query) && count($this->prev_or_query) > 0) {
 					//或运算  (a|b) c = c left join a, c left join b where a IS NOT NULL or b IS NOT NULL
 					$or_where = array();
 					while($this->restore(TRUE, $this->prev_or_query)) {
