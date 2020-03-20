@@ -202,6 +202,25 @@ abstract class _Email {
         $this->_reply_to = $email;
     }
 
+    function cc($email, $name=NULL){
+        if (is_array($email)) {
+            $header_to = array();
+            foreach($email as $k => $v) {
+                if (is_numeric($k)) {
+                    $header_to[] = $v;
+                }
+                else {
+                    // $k是name, $v是email
+                    $header_to[] = $k ? $this->encode_text($k) . "<$v>" : $v;
+                }
+            }
+            $this->_header['Cc'] = implode(', ', $header_to);
+        }
+        else {
+            $this->_header['Cc'] = $name ? $this->encode_text($name) . "<$email>" : $email;
+        }
+    }
+
     function to($email, $name=NULL) {
         if (is_array($email)) {
             $mails = array();
