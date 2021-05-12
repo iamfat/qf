@@ -394,8 +394,8 @@ abstract class _ORM_Model {
 		}
 
 		array_unshift($args, $SQL);
-		
-	    $ds = call_user_func_array(array($db, 'query'), $args);
+
+		$ds = call_user_func_array(array($db, 'query'), $args);
 		if (!$ds) return FALSE;
 		
 		if($overwrite || $id > 0){
@@ -405,7 +405,7 @@ abstract class _ORM_Model {
 			$id = $db->insert_id();
 		}
 
-		$data['id'] = $id;
+		if ($id !== NULL) $data['id'] = $id;
 		
 		return TRUE;
 	}
