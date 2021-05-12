@@ -118,7 +118,7 @@ final class Cache {
 	static function cache_file($path, $recache = FALSE) {
 		$cache_file = self::cache_filename($path);
 		$cache_path = ROOT_PATH.PUBLIC_BASE.$cache_file;
-		if ($recache || !file_exists($cache_path)) {
+		if (($recache || !file_exists($cache_path)) && file_exists($path)) {
 			$dir = dirname($cache_path);
 			if (!is_dir($dir)) {
 				mkdir($dir, 0755, true);
