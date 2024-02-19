@@ -65,7 +65,7 @@ final class CLI
 
 		if (isset($errors[$errno])) {
 			fprintf(STDERR, sprintf("%s %s (\x1b[34m%s\x1b[0m:%d)\n", $errors[$errno], $errstr, $errfile, $errline));
-		} else if (defined('DEBUG') && isset($others[$errno])) {
+		} else if (defined('DEBUG') && DEBUG === 'warning' && isset($others[$errno])) {
 			fprintf(STDERR, sprintf("%s %s (\x1b[34m%s\x1b[0m:%d)\n", $others[$errno], $errstr, $errfile, $errline));
 		}
 		// throw new \ErrorException($errstr, $errno, 1, $errfile, $errline);

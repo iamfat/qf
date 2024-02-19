@@ -70,7 +70,7 @@ final class CGI
 
 		if (isset($errors[$errno])) {
 			error_log(sprintf("%s %s (%s:%d)\n", $errors[$errno], $errstr, $errfile, $errline));
-		} else if (defined('DEBUG') && isset($others[$errno])) {
+		} else if (defined('DEBUG') && DEBUG === 'warning' && isset($others[$errno])) {
 			error_log(STDERR, sprintf("%s %s (%s:%d)\n", $others[$errno], $errstr, $errfile, $errline));
 		}
 		// throw new ErrorException($errstr, $errno, 1, $errfile, $errline);
