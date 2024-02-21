@@ -79,6 +79,7 @@ final class CLI
 
 register_shutdown_function('CLI::shutdown');
 set_exception_handler('CLI::exception');
+error_reporting(E_ALL & ~E_NOTICE);
 set_error_handler('CLI::error', E_ALL & ~E_NOTICE);
 
 // assert_options(ASSERT_ACTIVE, 1);

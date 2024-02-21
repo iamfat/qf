@@ -84,6 +84,7 @@ final class CGI
 
 register_shutdown_function('CGI::shutdown');
 set_exception_handler('CGI::exception');
+error_reporting(E_ALL & ~E_NOTICE);
 set_error_handler('CGI::error', E_ALL & ~E_NOTICE);
 
 // assert_options(ASSERT_ACTIVE, 1);
