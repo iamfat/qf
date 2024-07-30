@@ -137,7 +137,7 @@ abstract class _Event
             if ($e) {
                 $e->stop_propagation = false;
                 $e->return_value = $retval;
-                $e->debug = !!Config::get('debug.event:' . $name);
+                $e->debug = !!Config::get('debug.event:' . $name, Config::get('debug.event'));
                 call_user_func_array(array($e, $method), $params);
                 $retval = $e->return_value;
                 if ($e->stop_propagation) {
